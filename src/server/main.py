@@ -1,12 +1,9 @@
-# Echo server program with timer state
-import socket
-import ast
+from flask import Flask, request, jsonify
 import threading
 import time
 import json
 import os
 from copy import deepcopy
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
@@ -42,17 +39,30 @@ def timer_loop():
                         state['running'] = False
         time.sleep(1)
 
-threading.Thread(target=timer_loop, daemon=True).start()
+# Start timer thread
+timer_thread = threading.Thread(target=timer_loop, daemon=True)
+timer_thread.start()
 
-# ----- FLASK ENDPOINTS (Health Check + Socket Proxy) -----
+# ----- FLASK ENDPOINTS -----
 @app.route('/')
 @app.route('/health')
 def health():
     return 'OK', 200
 
-@app.route('/socket', methods=['POST'])
+@app.route('/socket', methods=['GET', 'POST'])
 def socket_proxy():
-    """Handle socket commands via HTTP"""
+    """Handle all timer commands via HTTP"""
+    if request.method == 'GET':
+        # GET returns current state
+        with state_lock:
+            return jsonify({
+                'settings': state['settings'],
+                'current_index': state['current_index'],
+                'remaining': state['remaining'],
+                'running': state['running']
+            })
+    
+    # POST handles commands
     data = request.json
     cmd = data.get('command', '')
     args = data.get('args', [])
@@ -92,43 +102,49 @@ def socket_proxy():
             
             # Period Management
             elif cmd == 'INCREASE_PERIOD':
-                period_id, time_to_add = args
-                if 0 <= period_id < len(state['settings']):
-                    state['settings'][period_id][1] += time_to_add
+                if len(args) >= 2:
+                    period_id, time_to_add = args
+                    if 0 <= period_id < len(state['settings']):
+                        state['settings'][period_id][1] += time_to_add
                 return jsonify({'status': 'ok'})
             
             elif cmd == 'DECREASE_PERIOD':
-                period_id, time_to_sub = args
-                if 0 <= period_id < len(state['settings']):
-                    state['settings'][period_id][1] -= time_to_sub
+                if len(args) >= 2:
+                    period_id, time_to_sub = args
+                    if 0 <= period_id < len(state['settings']):
+                        state['settings'][period_id][1] -= time_to_sub
+                        if state['settings'][period_id][1] < 0:
+                            state['settings'][period_id][1] = 0
                 return jsonify({'status': 'ok'})
             
             elif cmd == 'SET_PERIOD_TIME':
-                period_id, new_time = args
-                if 0 <= period_id < len(state['settings']):
-                    state['settings'][period_id][1] = new_time
+                if len(args) >= 2:
+                    period_id, new_time = args
+                    if 0 <= period_id < len(state['settings']):
+                        state['settings'][period_id][1] = new_time
                 return jsonify({'status': 'ok'})
             
             elif cmd == 'REMOVE_PERIOD':
-                period_id = args[0]
-                if 0 <= period_id < len(state['settings']):
-                    if period_id < state['current_index']:
-                        state['current_index'] -= 1
-                    elif period_id == state['current_index']:
-                        if state['current_index'] < len(state['settings']) - 1:
-                            state['current_index'] += 1
-                            state['remaining'] = state['settings'][state['current_index']][1]
-                        else:
-                            if state['current_index'] > 0:
-                                state['current_index'] -= 1
+                if len(args) >= 1:
+                    period_id = args[0]
+                    if 0 <= period_id < len(state['settings']):
+                        if period_id < state['current_index']:
+                            state['current_index'] -= 1
+                        elif period_id == state['current_index']:
+                            if state['current_index'] < len(state['settings']) - 1:
+                                state['current_index'] += 1
                                 state['remaining'] = state['settings'][state['current_index']][1]
                             else:
-                                state['current_index'] = 0
-                                state['remaining'] = 0
-                        state['running'] = False
-                    state['settings'].pop(period_id)
-                    for i in range(period_id, len(state['settings'])):
-                        state['settings'][i][0] = f"period_{i+1}"
+                                if state['current_index'] > 0:
+                                    state['current_index'] -= 1
+                                    state['remaining'] = state['settings'][state['current_index']][1]
+                                else:
+                                    state['current_index'] = 0
+                                    state['remaining'] = 0
+                            state['running'] = False
+                        state['settings'].pop(period_id)
+                        for i in range(period_id, len(state['settings'])):
+                            state['settings'][i][0] = f"period_{i+1}"
                 return jsonify({'status': 'ok'})
             
             elif cmd == 'CREATE_PERIOD':
@@ -145,7 +161,7 @@ def socket_proxy():
                 })
             
             else:
-                return jsonify({'status': 'error', 'message': 'Unknown command'}), 400
+                return jsonify({'status': 'error', 'message': f'Unknown command: {cmd}'}), 400
                 
         except Exception as e:
             return jsonify({'status': 'error', 'message': str(e)}), 500

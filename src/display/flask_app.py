@@ -11,31 +11,38 @@ def convert_seconds_to_time(seconds):
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     secs = seconds % 60
-    return f"{hours:02}:{minutes:02}:{secs:02}"
+    if hours > 0:
+        return f"{hours:02}:{minutes:02}:{secs:02}"
+    return f"{minutes:02}:{secs:02}"
 
-def fetch_timer_state():
+def get_state():
+    """Get current timer state via HTTP GET"""
     try:
-        resp = requests.get(f'http://{SOCKET_HOST}:{SOCKET_PORT}/socket', 
-                           json={'command': 'GET_STATE'},
-                           timeout=5)
-        return resp.json()
+        resp = requests.get(
+            f'http://{SOCKET_HOST}:{SOCKET_PORT}/socket',
+            timeout=5
+        )
+        if resp.status_code == 200:
+            return resp.json()
+        return None
     except Exception as e:
-        print(f"Error fetching state: {e}")
+        print(f"Error: {e}")
         return None
 
 @app.route('/')
 def index():
-    state = fetch_timer_state()
-    if state is None or state.get('status') == 'error':
+    state = get_state()
+    if state is None:
         return "Timer server is not running. Please start the server first.", 503
     return render_template('timer.html', state=state, convert_seconds_to_time=convert_seconds_to_time)
 
 @app.route('/state')
 def state():
-    state = fetch_timer_state()
+    state = get_state()
     if state is None:
         return jsonify({'error': 'Server unavailable'}), 503
     return jsonify(state)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5001)), debug=False)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port, debug=False)
