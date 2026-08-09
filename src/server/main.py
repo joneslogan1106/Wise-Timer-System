@@ -1,14 +1,34 @@
+# Echo server program with timer state
 import socket
 import ast
 import threading
 import time
 import json
+import os
 from copy import deepcopy
+from flask import Flask
 
+# ----- Flask Health Check (keeps Render happy) -----
+health_app = Flask(__name__)
+
+@health_app.route('/')
+@health_app.route('/health')
+def health():
+    return 'OK', 200
+
+def run_health_server():
+    """Run Flask health check on Render's assigned port"""
+    port = int(os.environ.get('PORT', 9980))
+    health_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
+# Start health check in a separate thread
+health_thread = threading.Thread(target=run_health_server, daemon=True)
+health_thread.start()
+
+# ----- Original Socket Server Code (on a different port) -----
 HOST = '0.0.0.0'
-PORT = 9980  # Use environment variable
+SOCKET_PORT = int(os.environ.get('SOCKET_PORT', 9981))  # Different port for socket
 
-# Initial settings
 settings = [
     ["period_1", 960],
     ["period_2", 960],
@@ -16,7 +36,6 @@ settings = [
     ["period_4", 960]
 ]
 
-# Timer state
 state = {
     'settings': settings,
     'current_index': 0,
@@ -56,16 +75,13 @@ def handle_client(conn, addr):
                 break
             msg = data.decode().strip()
             print("Received:", msg)
-
-            # Wrap command handling to catch exceptions
+            
             try:
                 if msg.startswith("INCREASE PERIOD:"):
                     period_id, time_to_add = ast.literal_eval(msg[17:])
                     with state_lock:
                         if 0 <= period_id < len(state['settings']):
                             state['settings'][period_id][1] += time_to_add
-                        else:
-                            raise ValueError("Invalid period ID")
                     conn.sendall(b"CONNECTION OK")
 
                 elif msg.startswith("DECREASE PERIOD:"):
@@ -73,8 +89,6 @@ def handle_client(conn, addr):
                     with state_lock:
                         if 0 <= period_id < len(state['settings']):
                             state['settings'][period_id][1] -= time_to_sub
-                        else:
-                            raise ValueError("Invalid period ID")
                     conn.sendall(b"CONNECTION OK")
 
                 elif msg.startswith("SET PERIOD TIME:"):
@@ -82,45 +96,29 @@ def handle_client(conn, addr):
                     with state_lock:
                         if 0 <= period_id < len(state['settings']):
                             state['settings'][period_id][1] = new_time
-                        else:
-                            raise ValueError("Invalid period ID")
                     conn.sendall(b"CONNECTION OK")
 
                 elif msg.startswith("REMOVE PERIOD:"):
                     period_id = int(msg[15:])
                     with state_lock:
-                        if period_id < 0 or period_id >= len(state['settings']):
-                            raise ValueError("Period ID out of range")
-                        # Adjust current_index if needed
-                        if period_id < state['current_index']:
-                            state['current_index'] -= 1
-                        elif period_id == state['current_index']:
-                            # If we are removing the current period, move to next if possible
-                            if state['current_index'] < len(state['settings']) - 1:
-                                state['current_index'] += 1
-                                state['remaining'] = state['settings'][state['current_index']][1]
-                            else:
-                                # Last period: go to previous
-                                if state['current_index'] > 0:
-                                    state['current_index'] -= 1
+                        if 0 <= period_id < len(state['settings']):
+                            if period_id < state['current_index']:
+                                state['current_index'] -= 1
+                            elif period_id == state['current_index']:
+                                if state['current_index'] < len(state['settings']) - 1:
+                                    state['current_index'] += 1
                                     state['remaining'] = state['settings'][state['current_index']][1]
                                 else:
-                                    # Only period left, set to 0
-                                    state['current_index'] = 0
-                                    state['remaining'] = 0
-                            state['running'] = False
-                        # Remove the period
-                        state['settings'].pop(period_id)
-                        # Renumber subsequent periods
-                        for i in range(period_id, len(state['settings'])):
-                            state['settings'][i][0] = f"period_{i+1}"
-                        # If we removed the last period and current_index is now out of bounds, fix it
-                        if state['current_index'] >= len(state['settings']):
-                            state['current_index'] = len(state['settings']) - 1 if state['settings'] else 0
-                            if state['settings']:
-                                state['remaining'] = state['settings'][state['current_index']][1]
-                            else:
-                                state['remaining'] = 0
+                                    if state['current_index'] > 0:
+                                        state['current_index'] -= 1
+                                        state['remaining'] = state['settings'][state['current_index']][1]
+                                    else:
+                                        state['current_index'] = 0
+                                        state['remaining'] = 0
+                                state['running'] = False
+                            state['settings'].pop(period_id)
+                            for i in range(period_id, len(state['settings'])):
+                                state['settings'][i][0] = f"period_{i+1}"
                     conn.sendall(b"CONNECTION OK")
 
                 elif msg == "CREATE PERIOD":
@@ -157,8 +155,6 @@ def handle_client(conn, addr):
                         state['running'] = False
                         if state['current_index'] < len(state['settings']):
                             state['remaining'] = state['settings'][state['current_index']][1]
-                        else:
-                            state['remaining'] = 0
                     conn.sendall(b"CONNECTION OK")
 
                 elif msg == "NEXT PERIOD":
@@ -190,19 +186,19 @@ def handle_client(conn, addr):
 
                 else:
                     conn.sendall(b"UNKNOWN COMMAND")
-
+                    
             except Exception as e:
-                # Catch any error, log it, and send an error response to the client
-                print(f"Error handling command '{msg}': {e}")
+                print(f"Error: {e}")
                 conn.sendall(b"ERROR: " + str(e).encode())
-
         print('Disconnected from', addr)
 
+# Start socket server on separate port
+print(f"Starting socket server on {HOST}:{SOCKET_PORT}")
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((HOST, PORT))
+    s.bind((HOST, SOCKET_PORT))
     s.listen(5)
-    print(f"Server listening on {HOST}:{PORT}")
+    print(f"Socket server running on port {SOCKET_PORT}")
     while running_server:
         try:
             conn, addr = s.accept()
