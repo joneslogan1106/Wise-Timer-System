@@ -5,7 +5,8 @@ import json
 
 app = Flask(__name__)
 HOST = '0.0.0.0'
-PORT = 9980
+PORT = int(os.environ.get('CONTROLLER_PORT', 5000))
+
 
 def convert_seconds_to_time(seconds):
     hours = seconds // 3600
@@ -129,4 +130,4 @@ def index():
                            convert_seconds_to_time=convert_seconds_to_time)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=PORT, debug=False)

@@ -4,8 +4,8 @@ import json
 
 app = Flask(__name__)
 
-SERVER_HOST = '127.0.0.1'   # Change to the server's IP if needed
-SERVER_PORT = 9980
+SOCKET_HOST = os.environ.get('SOCKET_HOST', '127.0.0.1')
+SOCKET_PORT = int(os.environ.get('SOCKET_PORT', 9980))
 
 def fetch_timer_state():
     """Connect to the timer server and fetch the current state."""
@@ -39,4 +39,5 @@ def state():
     return jsonify(state)
 
 if __name__ == '__main__':
+    port = int(os.environ.get('DISPLAY_PORT', 5001))
     app.run(host='0.0.0.0', port=5001, debug=False)   # Use a different port than the controller
