@@ -8,5 +8,21 @@
 </head>
 <body>
     <h1>Welcome to the Wise Timing System</h1>
+    <h2>Current Settings</h2>
+    <ul>
+        {% for setting in settings %}
+            <li>Period {{ setting[0][7:] }}: {{ convert_seconds_to_time(setting[1]) }}</li>
+        {% endfor %}
+    </ul>
+    <h2>Controls</h2>
+    <form action="/end_server" method="post">
+        <button type="submit">End Timer Server</button>
+    </form>
+    <form id="control-form-increase" action="/increase" method="post">
+        <span>Increase period by time:</span>
+        <input id="increase-time" placeholder="Enter the time in the format of HH:MM:SS" name="increase_time" type="text" required>
+        <input id="period-input-increase" placeholder="Enter the period number to increase" name="period_number" type="number" required>
+        <button type="submit">Increase</button> 
+    </form>
 </body>
 </html>

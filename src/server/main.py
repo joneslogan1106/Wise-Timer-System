@@ -1,5 +1,5 @@
 # Echo server program
-import socket
+import socket, ast
 
 HOST = '0.0.0.0'                 # Symbolic name meaning all available interfaces
 PORT = 9980              # This is the port all TLG apps will go off of
@@ -21,11 +21,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = conn.recv(1024)
                 if not data: break
                 print(data.decode())
-                if data.decode() == "REQUEST TIMER SETTINGS":
+                if data.decode().startswith("INCREASE PERIOD:"):
+                    period_id, time_to_add = ast.literal_eval(data.decode()[17:])
+                    settings[period_id][1] += time_to_add
+                    conn.sendall("CONNECTION OK".encode())  # Send OK after processing
+                elif data.decode() == "REQUEST TIMER SETTINGS":
                     conn.sendall(("CONTROLLER:" + str(settings)).encode())
-                if data == b"END TIMER SERVER": # This message will be sent if the client wants to stop the server/end the app, which this option will be available from the controller 
+                    conn.sendall("CONNECTION OK".encode())  # Send OK after data
+                elif data == b"END TIMER SERVER":
                     conn.sendall("STOP".encode())
                     running = False
+                    conn.close()
                     break
-                conn.sendall("CONNECTION OK".encode())
                 
