@@ -113,7 +113,7 @@ def index():
     except:
         return "Timer server is not running. Please start the server first."
 
-    return render_template('base.html', 
+    return render_template('controller.html', 
                            settings=settings, 
                            convert_seconds_to_time=convert_seconds_to_time)
 
