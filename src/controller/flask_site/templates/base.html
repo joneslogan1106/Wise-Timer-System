@@ -24,5 +24,11 @@
         <input id="period-input-increase" placeholder="Enter the period number to increase" name="period_number" type="number" required>
         <button type="submit">Increase</button> 
     </form>
+    <form id="control-form-decrease" action="/decrease" method="post">
+        <span>Decrease period by time:</span>
+        <input id="decrease-time" placeholder="Enter the time in the format of HH:MM:SS" name="decrease_time" type="text" required>
+        <input id="period-input-decrease" placeholder="Enter the period number to decrease" name="period_number" type="number" required>
+        <button type="submit">Decrease</button> 
+    </form>
 </body>
 </html>

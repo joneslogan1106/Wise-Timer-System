@@ -25,6 +25,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     period_id, time_to_add = ast.literal_eval(data.decode()[17:])
                     settings[period_id][1] += time_to_add
                     conn.sendall("CONNECTION OK".encode())  # Send OK after processing
+                elif data.decode().startswith("DECREASE PERIOD:"):
+                    period_id, time_to_add = ast.literal_eval(data.decode()[17:])
+                    settings[period_id][1] -= time_to_add
+                    conn.sendall("CONNECTION OK".encode())  # Send OK after processing
                 elif data.decode() == "REQUEST TIMER SETTINGS":
                     conn.sendall(("CONTROLLER:" + str(settings)).encode())
                     conn.sendall("CONNECTION OK".encode())  # Send OK after data
