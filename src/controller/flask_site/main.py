@@ -48,6 +48,14 @@ def remove():
         s.recv(1024)  # Read the response to avoid broken pipe
     return redirect('/')
 
+@app.route('/create_period', methods=['POST'])
+def create():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(b'CREATE PERIOD')
+        s.recv(1024)  # Read the response to avoid broken pipe
+    return redirect('/')
+
 @app.route('/end_server', methods=['POST'])
 def end_server_route():
     try:
