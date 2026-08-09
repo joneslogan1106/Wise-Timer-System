@@ -1,5 +1,5 @@
 services:
-  # Socket Server (Background Worker) - NO healthCheckPath
+  # Socket Server (Background Worker)
   - type: worker
     name: wise-timer-socket
     env: python
@@ -18,8 +18,10 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn controller:app --bind 0.0.0.0:$PORT
     envVars:
-      - key: CONTROLLER_PORT
-        value: 5000
+      - key: SOCKET_HOST
+        value: wise-timer-socket.onrender.com
+      - key: SOCKET_PORT
+        value: 9980
     healthCheckPath: /
 
   # Timer Display Web App
@@ -29,6 +31,8 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn timer_display:app --bind 0.0.0.0:$PORT
     envVars:
-      - key: DISPLAY_PORT
-        value: 5001
+      - key: SOCKET_HOST
+        value: wise-timer-socket.onrender.com
+      - key: SOCKET_PORT
+        value: 9980
     healthCheckPath: /
