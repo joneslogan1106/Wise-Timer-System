@@ -39,6 +39,15 @@ def decrease():
         s.recv(1024)  # Read the response to avoid broken pipe
     return redirect('/')
 
+@app.route('/remove_period', methods=['POST'])
+def remove():
+    period_id = int(request.form.get('period-input-remove'))
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(f'REMOVE PERIOD: {period_id-1}'.encode())
+        s.recv(1024)  # Read the response to avoid broken pipe
+    return redirect('/')
+
 @app.route('/end_server', methods=['POST'])
 def end_server_route():
     try:
