@@ -1,0 +1,434 @@
+/* =========================================================
+   WISE TIMING SYSTEM
+   Dr. Henry A. Wise Jr. High School
+   ========================================================= */
+
+:root {
+    --wise-blue: #002855;
+    --wise-blue-dark: #001b3a;
+    --wise-blue-light: #0b4f91;
+    --wise-gold: #fdbb30;
+
+    --background: #eef2f7;
+    --white: #ffffff;
+    --text: #172033;
+    --muted: #667085;
+    --border: #d9e0e8;
+
+    --danger: #c62828;
+
+    --radius: 12px;
+    --shadow: 0 4px 16px rgba(0, 40, 85, 0.10);
+}
+
+/* ---------- General ---------- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: var(--background);
+    color: var(--text);
+}
+
+/* ---------- Header ---------- */
+
+header {
+    background: var(--wise-blue);
+    border-bottom: 5px solid var(--wise-gold);
+    color: white;
+}
+
+.header {
+    width: min(1200px, 94%);
+    margin: auto;
+
+    min-height: 125px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 22px;
+}
+
+/* Logo area */
+
+.logo {
+    width: 85px;
+    height: 85px;
+
+    background: white;
+
+    border: 4px solid var(--wise-gold);
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    flex-shrink: 0;
+}
+
+.logo img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+}
+
+/* Header text */
+
+.header-text h1 {
+    margin: 0;
+
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.header-text p {
+    margin: 5px 0 0;
+
+    color: #dbe6f2;
+
+    font-size: 0.95rem;
+}
+
+/* ---------- Main ---------- */
+
+main {
+    width: min(1200px, 94%);
+    margin: 35px auto 60px;
+}
+
+/* ---------- Section titles ---------- */
+
+.section-header {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.section-header::before {
+    content: "";
+
+    width: 5px;
+    height: 26px;
+
+    border-radius: 4px;
+
+    background: var(--wise-gold);
+}
+
+.section-header h2 {
+    margin: 0;
+
+    color: var(--wise-blue);
+
+    font-size: 1.35rem;
+}
+
+/* ---------- Current settings ---------- */
+
+.settings {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    padding: 20px;
+
+    margin-bottom: 35px;
+}
+
+.settings ul {
+    list-style: none;
+
+    padding: 0;
+    margin: 0;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
+
+    gap: 12px;
+}
+
+.settings li {
+    padding: 16px;
+
+    background: #f7f9fc;
+
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--wise-blue);
+
+    border-radius: 8px;
+
+    font-weight: 700;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ---------- Controls ---------- */
+
+.controls {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+/* ---------- Control cards ---------- */
+
+.control-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    padding: 22px;
+}
+
+.control-card h3 {
+    margin: 0 0 5px;
+
+    color: var(--wise-blue);
+
+    font-size: 1.1rem;
+}
+
+.control-card p {
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    font-size: 0.88rem;
+}
+
+/* ---------- Forms ---------- */
+
+.control-card form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.control-card span {
+    font-weight: 700;
+
+    color: #344054;
+
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+
+    padding: 12px 13px;
+
+    border: 1px solid #cbd3df;
+    border-radius: 8px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-size: 0.95rem;
+
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--wise-blue-light);
+
+    box-shadow:
+        0 0 0 3px rgba(11, 79, 145, 0.12);
+}
+
+input::placeholder {
+    color: #98a2b3;
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+    width: 100%;
+
+    padding: 12px 16px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: var(--wise-blue);
+
+    color: white;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.1s ease;
+}
+
+button:hover {
+    background: var(--wise-blue-light);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* ---------- Create button ---------- */
+
+#create-period {
+    background: var(--wise-gold);
+    color: var(--wise-blue-dark);
+}
+
+#create-period:hover {
+    background: #ffc94d;
+}
+
+/* ---------- Danger zone ---------- */
+
+.danger-zone {
+    margin-top: 30px;
+
+    padding: 20px;
+
+    background: #fff6f6;
+
+    border: 1px solid #f0caca;
+
+    border-radius: var(--radius);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+.danger-zone h3 {
+    margin: 0 0 4px;
+
+    color: var(--danger);
+}
+
+.danger-zone p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 0.88rem;
+}
+
+.danger-zone form {
+    min-width: 210px;
+}
+
+.danger-zone button {
+    background: var(--danger);
+}
+
+.danger-zone button:hover {
+    background: #991f1f;
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+    padding: 20px;
+
+    text-align: center;
+
+    background: var(--wise-blue);
+
+    border-top: 4px solid var(--wise-gold);
+
+    color: #dbe6f2;
+
+    font-size: 0.8rem;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 750px) {
+
+    .header {
+        padding: 18px 0;
+    }
+
+    .logo {
+        width: 65px;
+        height: 65px;
+    }
+
+    .header-text h1 {
+        font-size: 1.4rem;
+    }
+
+    .header-text p {
+        font-size: 0.8rem;
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .danger-zone {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .danger-zone form {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 450px) {
+
+    .header {
+        gap: 12px;
+    }
+
+    .logo {
+        width: 55px;
+        height: 55px;
+    }
+
+    .header-text h1 {
+        font-size: 1.15rem;
+    }
+
+    .settings ul {
+        grid-template-columns: 1fr;
+    }
+}

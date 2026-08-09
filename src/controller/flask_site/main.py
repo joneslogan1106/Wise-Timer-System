@@ -29,6 +29,16 @@ def increase():
         s.recv(1024)  # Read the response to avoid broken pipe
     return redirect('/')
 
+@app.route('/set-time', methods=['POST'])
+def set_time():
+    period_id = int(request.form.get('period_number'))
+    new_time = convert_time_to_seconds(request.form.get('set_time'))
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((HOST, PORT))
+        s.sendall(f'SET PERIOD TIME: [{period_id-1}, {new_time}]'.encode())
+        s.recv(1024)  # Read the response to avoid broken pipe
+    return redirect('/')
+
 @app.route('/decrease', methods=['POST'])
 def decrease():
     period_id = int(request.form.get('period_number'))
