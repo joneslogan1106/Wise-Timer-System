@@ -6,7 +6,7 @@ import json
 from copy import deepcopy
 
 HOST = '0.0.0.0'
-PORT = int(os.environ.get('SOCKET_PORT', 9980))  # Use environment variable
+PORT = 9980  # Use environment variable
 
 # Initial settings
 settings = [

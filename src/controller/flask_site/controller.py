@@ -5,7 +5,7 @@ import json
 
 app = Flask(__name__)
 HOST = '0.0.0.0'
-PORT = int(os.environ.get('CONTROLLER_PORT', 5000))
+PORT = 5000
 
 
 def convert_seconds_to_time(seconds):
