@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wise Timing System - Controller</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicion.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .timer-status {
+            background: #1a1a1a;
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+        }
+        .timer-status .period {
+            font-size: 2rem;
+            color: #FFD700;
+        }
+        .timer-status .time {
+            font-size: 4rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 4px;
+            color: #fff;
+        }
+        .timer-status .state {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        .timer-status .state .running { color: #4CAF50; }
+        .timer-status .state .paused { color: #FFA726; }
+
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .control-buttons button {
+            background: #333;
+            border: none;
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            letter-spacing: 1px;
+        }
+        .control-buttons button:hover { background: #555; }
+        .control-buttons button.start { background: #2e7d32; }
+        .control-buttons button.start:hover { background: #388e3c; }
+        .control-buttons button.pause { background: #b26a00; }
+        .control-buttons button.pause:hover { background: #cc7a00; }
+        .control-buttons button.reset { background: #b71c1c; }
+        .control-buttons button.reset:hover { background: #c62828; }
+        .control-buttons button.nav { background: #0d47a1; }
+        .control-buttons button.nav:hover { background: #1565c0; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='wise-logo.png') }}" alt="Wise High School Logo">
+        </div>
+        <div class="header-text">
+            <h1>Wise Timing System</h1>
+            <p>Dr. Henry A. Wise Jr. High School</p>
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- TIMER STATUS (updated by JavaScript) -->
+    <div class="section-header"><h2>Timer Status</h2></div>
+    <section class="timer-status" id="timerStatus">
+        <div class="period">Period <span id="periodNum">-</span></div>
+        <div class="time" id="timerDisplay">--:--</div>
+        <div class="state">Status: <span id="stateDisplay" class="paused">⏸ PAUSED</span></div>
+    </section>
+
+    <!-- TIMER CONTROLS -->
+    <div class="section-header"><h2>Timer Controls</h2></div>
+    <section>
+        <div class="control-buttons">
+            <form action="/start" method="post" style="display:inline;"><button type="submit" class="start">▶ Start</button></form>
+            <form action="/pause" method="post" style="display:inline;"><button type="submit" class="pause">⏸ Pause</button></form>
+            <form action="/reset" method="post" style="display:inline;"><button type="submit" class="reset">⟲ Reset</button></form>
+            <form action="/next" method="post" style="display:inline;"><button type="submit" class="nav">⏭ Next Period</button></form>
+            <form action="/prev" method="post" style="display:inline;"><button type="submit" class="nav">⏮ Prev Period</button></form>
+        </div>
+    </section>
+
+    <!-- PERIOD SETTINGS -->
+    <div class="section-header"><h2>Period Settings</h2></div>
+    <section class="settings">
+        <ul>
+            {% for setting in settings %}
+                <li>Period {{ setting[0][7:] }}: {{ convert_seconds_to_time(setting[1]) }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <!-- EDIT PERIODS -->
+    <div class="section-header"><h2>Edit Periods</h2></div>
+    <section class="controls">
+        <div class="control-card">
+            <h3>Increase Period</h3>
+            <p>Add time to a specific period.</p>
+            <form action="/increase" method="post">
+                <span>Increase period by time:</span>
+                <input placeholder="HH:MM:SS" name="increase_time" type="text" required>
+                <input placeholder="Period number" name="period_number" type="number" required>
+                <button type="submit">Increase</button>
+            </form>
+        </div>
+        <div class="control-card">
+            <h3>Decrease Period</h3>
+            <p>Remove time from a specific period.</p>
+            <form action="/decrease" method="post">
+                <span>Decrease period by time:</span>
+                <input placeholder="HH:MM:SS" name="decrease_time" type="text" required>
+                <input placeholder="Period number" name="period_number" type="number" required>
+                <button type="submit">Decrease</button>
+            </form>
+        </div>
+        <div class="control-card">
+            <h3>Set Period Time</h3>
+            <p>Set a period to an exact time.</p>
+            <form action="/set-time" method="post">
+                <span>Set period time:</span>
+                <input placeholder="HH:MM:SS" name="set_time" type="text" required>
+                <input placeholder="Period number" name="period_number" type="number" required>
+                <button type="submit">Set Time</button>
+            </form>
+        </div>
+        <div class="control-card">
+            <h3>Create Period</h3>
+            <p>Add a new period to the timing system.</p>
+            <form action="/create_period" method="post">
+                <button type="submit">Create</button>
+            </form>
+        </div>
+        <div class="control-card">
+            <h3>Remove Period</h3>
+            <p>Remove an existing period.</p>
+            <form action="/remove_period" method="post">
+                <span>Remove period:</span>
+                <input placeholder="Period number" name="period_number" type="number" required>
+                <button type="submit">Remove</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- SERVER SHUTDOWN -->
+    <section class="danger-zone">
+        <div><h3>Timer Server</h3><p>Shut down the timing server.</p></div>
+        <form action="/end_server" method="post"><button type="submit">End Timer Server</button></form>
+    </section>
+</main>
+
+<footer>
+    Wise Timing System &nbsp;•&nbsp; Dr. Henry A. Wise Jr. High School
+</footer>
+
+<script>
+    function formatTime(seconds) {
+        if (seconds < 0) seconds = 0;
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function updateStatus() {
+        fetch('/timer-state')
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('periodNum').textContent = '?';
+                    document.getElementById('timerDisplay').textContent = '--:--';
+                    document.getElementById('stateDisplay').textContent = '⏸ OFFLINE';
+                    document.getElementById('stateDisplay').className = 'paused';
+                    return;
+                }
+                document.getElementById('periodNum').textContent = data.current_period;
+                document.getElementById('timerDisplay').textContent = formatTime(data.remaining);
+                const stateSpan = document.getElementById('stateDisplay');
+                if (data.running) {
+                    stateSpan.textContent = '▶ RUNNING';
+                    stateSpan.className = 'running';
+                } else {
+                    stateSpan.textContent = '⏸ PAUSED';
+                    stateSpan.className = 'paused';
+                }
+            })
+            .catch(() => {
+                document.getElementById('periodNum').textContent = '?';
+                document.getElementById('timerDisplay').textContent = 'ERR';
+                document.getElementById('stateDisplay').textContent = '⏸ OFFLINE';
+                document.getElementById('stateDisplay').className = 'paused';
+            });
+    }
+
+    // Update every second
+    updateStatus();
+    setInterval(updateStatus, 1000);
+</script>
+</body>
+</html>

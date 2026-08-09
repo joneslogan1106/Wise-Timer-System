@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wise Pumas Football Practice Clock</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicion.ico') }}" />
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0e1a; /* deep navy */
+            color: #fff;
+            font-family: 'Courier New', 'Segoe UI', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ---- BACKGROUND STREAKS (blue & yellow) ---- */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(0, 100, 255, 0.08) 30px,
+                    rgba(0, 100, 255, 0.08) 32px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(255, 215, 0, 0.07) 40px,
+                    rgba(255, 215, 0, 0.07) 42px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+        /* Top & bottom accent bars */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FFD700, #0066ff, #FFD700);
+            z-index: 0;
+        }
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #0066ff, #FFD700, #0066ff);
+            z-index: 0;
+        }
+
+        /* ---- CONTAINER ---- */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1300px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 90vh;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px 25px;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+        .logo-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-left img {
+            height: 70px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.3));
+        }
+        .pgtao {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #FFD700;
+            letter-spacing: 6px;
+            background: rgba(0, 100, 255, 0.2);
+            padding: 6px 20px;
+            border-radius: 40px;
+            border: 2px solid #FFD700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .header-center {
+            flex: 1;
+            min-width: 200px;
+        }
+        .header-center h1 {
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(0, 100, 255, 0.3);
+            text-transform: uppercase;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .header-center .subtitle {
+            font-size: 1.2rem;
+            color: #aac8ff;
+            letter-spacing: 2px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .logo-right img {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 100, 255, 0.4));
+        }
+
+        /* ---- TIMER CARD (scoreboard) ---- */
+        .timer-card {
+            background: linear-gradient(145deg, #111827, #0a0e1a);
+            border: 4px solid #FFD700;
+            border-radius: 50px;
+            padding: 35px 20px;
+            margin: 15px 0;
+            box-shadow:
+                0 0 60px rgba(255, 215, 0, 0.2),
+                inset 0 0 60px rgba(0, 100, 255, 0.1);
+            position: relative;
+            /* Inner glowing streak border */
+        }
+        .timer-card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid rgba(0, 100, 255, 0.3);
+            border-radius: 40px;
+            pointer-events: none;
+        }
+        .timer-card::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(255, 215, 0, 0.04) 20px,
+                rgba(255, 215, 0, 0.04) 22px
+            );
+            border-radius: 45px;
+            pointer-events: none;
+        }
+
+        .period-label {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #aac8ff;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .period-number {
+            font-size: 4.5rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .timer {
+            font-size: 11rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 8px;
+            color: #FFD700;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.4), 0 0 80px rgba(0, 100, 255, 0.2);
+            margin: 10px 0;
+            line-height: 1;
+            font-family: 'Courier New', monospace;
+        }
+        .next-period {
+            font-size: 1.8rem;
+            color: #ccc;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .next-period span {
+            color: #FFD700;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .status .running {
+            color: #4caf50;
+            text-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+        .status .paused {
+            color: #ffa726;
+            text-shadow: 0 0 20px rgba(255, 167, 38, 0.5);
+        }
+
+        /* ---- MOTTO ---- */
+        .motto {
+            margin-top: 30px;
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            border-top: 2px solid rgba(0, 100, 255, 0.4);
+            padding-top: 20px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .motto small {
+            display: block;
+            font-size: 1.1rem;
+            color: #88b0ff;
+            letter-spacing: 2px;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 900px) {
+            .timer { font-size: 8rem; }
+            .period-number { font-size: 3.5rem; }
+            .header-center h1 { font-size: 2rem; }
+            .pgtao { font-size: 1.6rem; }
+        }
+        @media (max-width: 600px) {
+            .timer { font-size: 5.5rem; }
+            .period-number { font-size: 2.5rem; }
+            .header-center h1 { font-size: 1.4rem; }
+            .pgtao { font-size: 1.2rem; padding: 4px 12px; }
+            .motto { font-size: 1.2rem; }
+            .logo-left img, .logo-right img { height: 40px; }
+            .next-period { font-size: 1.2rem; }
+            .status { font-size: 1.2rem; }
+        }
+        @media (max-width: 480px) {
+            .timer { font-size: 4rem; }
+            .header { flex-direction: column; align-items: center; }
+            .header-center { order: -1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- bottom accent bar -->
+    <div class="bottom-bar"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo-left">
+                <img src="{{ url_for('static', filename='wise-logo.png') }}" alt="Wise Logo" />
+                <span class="pgtao">P.G.T.A.O.</span>
+            </div>
+            <div class="header-center">
+                <h1>Wise Pumas Football Practice Clock</h1>
+                <div class="subtitle">Dr. Henry A. Wise Jr. High School</div>
+            </div>
+            <div class="logo-right">
+                <!-- Place adidas-logo.png in your static/ folder -->
+                <img src="{{ url_for('static', filename='adidas-logo.png') }}" alt="Adidas" />
+            </div>
+        </div>
+
+        <!-- TIMER CARD -->
+        <div class="timer-card">
+            <div class="period-label">Period</div>
+            <div class="period-number" id="periodNumber">1</div>
+            <div class="timer" id="timerDisplay">00:00</div>
+            <div class="next-period">
+                Next period starts in <span id="nextPeriodTime">00:00</span>
+            </div>
+            <div class="status" id="statusIndicator">
+                <span class="paused">⏸ PAUSED</span>
+            </div>
+        </div>
+
+        <!-- MOTTO -->
+        <div class="motto">
+            “Champions are made in the off season”
+            <small>🏆 P.U.M.A.S. Pride</small>
+        </div>
+    </div>
+
+    <script>
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function formatTime(seconds) {
+            if (seconds < 0) seconds = 0;
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+            return `${pad(m)}:${pad(s)}`;
+        }
+
+        function updateDisplay() {
+            fetch('/state')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('timerDisplay').textContent = '--:--';
+                        document.getElementById('periodNumber').textContent = '?';
+                        document.getElementById('nextPeriodTime').textContent = '--:--';
+                        document.getElementById('statusIndicator').innerHTML =
+                            '<span class="paused">⏸ OFFLINE</span>';
+                        return;
+                    }
+                    const idx = data.current_index || 0;
+                    const remaining = data.remaining || 0;
+                    const running = data.running || false;
+
+                    document.getElementById('periodNumber').textContent = idx + 1;
+                    document.getElementById('timerDisplay').textContent = formatTime(remaining);
+                    document.getElementById('nextPeriodTime').textContent = formatTime(remaining);
+
+                    const statusEl = document.getElementById('statusIndicator');
+                    if (running) {
+                        statusEl.innerHTML = '<span class="running">▶ RUNNING</span>';
+                    } else {
+                        statusEl.innerHTML = '<span class="paused">⏸ PAUSED</span>';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('timerDisplay').textContent = 'ERR';
+                    document.getElementById('periodNumber').textContent = '?';
+                    document.getElementById('nextPeriodTime').textContent = '--:--';
+                    document.getElementById('statusIndicator').innerHTML =
+                        '<span class="paused">⏸ OFFLINE</span>';
+                });
+        }
+
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
+    </script>
+</body>
+</html>
