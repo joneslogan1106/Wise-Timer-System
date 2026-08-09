@@ -6,29 +6,11 @@ import time
 import json
 import os
 from copy import deepcopy
-from flask import Flask
+from flask import Flask, request, jsonify
 
-# ----- Flask Health Check (keeps Render happy) -----
-health_app = Flask(__name__)
+app = Flask(__name__)
 
-@health_app.route('/')
-@health_app.route('/health')
-def health():
-    return 'OK', 200
-
-def run_health_server():
-    """Run Flask health check on Render's assigned port"""
-    port = int(os.environ.get('PORT', 9980))
-    health_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-
-# Start health check in a separate thread
-health_thread = threading.Thread(target=run_health_server, daemon=True)
-health_thread.start()
-
-# ----- Original Socket Server Code (on a different port) -----
-HOST = '0.0.0.0'
-SOCKET_PORT = int(os.environ.get('SOCKET_PORT', 9981))  # Different port for socket
-
+# ----- TIMER STATE -----
 settings = [
     ["period_1", 960],
     ["period_2", 960],
@@ -45,6 +27,7 @@ state = {
 state_lock = threading.Lock()
 running_server = True
 
+# ----- TIMER LOOP -----
 def timer_loop():
     global state, running_server
     while running_server:
@@ -59,152 +42,115 @@ def timer_loop():
                         state['running'] = False
         time.sleep(1)
 
-timer_thread = threading.Thread(target=timer_loop, daemon=True)
-timer_thread.start()
+threading.Thread(target=timer_loop, daemon=True).start()
 
-def handle_client(conn, addr):
-    global state, running_server
-    with conn:
-        print('Connected by', addr)
-        while True:
-            try:
-                data = conn.recv(1024)
-                if not data:
-                    break
-            except:
-                break
-            msg = data.decode().strip()
-            print("Received:", msg)
+# ----- FLASK ENDPOINTS (Health Check + Socket Proxy) -----
+@app.route('/')
+@app.route('/health')
+def health():
+    return 'OK', 200
+
+@app.route('/socket', methods=['POST'])
+def socket_proxy():
+    """Handle socket commands via HTTP"""
+    data = request.json
+    cmd = data.get('command', '')
+    args = data.get('args', [])
+    
+    with state_lock:
+        try:
+            # Timer Controls
+            if cmd == 'START_TIMER':
+                if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
+                    state['remaining'] = state['settings'][state['current_index']][1]
+                state['running'] = True
+                return jsonify({'status': 'ok'})
             
-            try:
-                if msg.startswith("INCREASE PERIOD:"):
-                    period_id, time_to_add = ast.literal_eval(msg[17:])
-                    with state_lock:
-                        if 0 <= period_id < len(state['settings']):
-                            state['settings'][period_id][1] += time_to_add
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg.startswith("DECREASE PERIOD:"):
-                    period_id, time_to_sub = ast.literal_eval(msg[17:])
-                    with state_lock:
-                        if 0 <= period_id < len(state['settings']):
-                            state['settings'][period_id][1] -= time_to_sub
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg.startswith("SET PERIOD TIME:"):
-                    period_id, new_time = ast.literal_eval(msg[17:])
-                    with state_lock:
-                        if 0 <= period_id < len(state['settings']):
-                            state['settings'][period_id][1] = new_time
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg.startswith("REMOVE PERIOD:"):
-                    period_id = int(msg[15:])
-                    with state_lock:
-                        if 0 <= period_id < len(state['settings']):
-                            if period_id < state['current_index']:
-                                state['current_index'] -= 1
-                            elif period_id == state['current_index']:
-                                if state['current_index'] < len(state['settings']) - 1:
-                                    state['current_index'] += 1
-                                    state['remaining'] = state['settings'][state['current_index']][1]
-                                else:
-                                    if state['current_index'] > 0:
-                                        state['current_index'] -= 1
-                                        state['remaining'] = state['settings'][state['current_index']][1]
-                                    else:
-                                        state['current_index'] = 0
-                                        state['remaining'] = 0
-                                state['running'] = False
-                            state['settings'].pop(period_id)
-                            for i in range(period_id, len(state['settings'])):
-                                state['settings'][i][0] = f"period_{i+1}"
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "CREATE PERIOD":
-                    with state_lock:
-                        new_num = len(state['settings']) + 1
-                        state['settings'].append([f"period_{new_num}", 0])
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "REQUEST TIMER SETTINGS":
-                    settings_copy = deepcopy(state['settings'])
-                    conn.sendall(("CONTROLLER:" + str(settings_copy)).encode())
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "END TIMER SERVER":
-                    conn.sendall(b"STOP")
-                    running_server = False
-                    conn.close()
-                    break
-
-                elif msg == "START TIMER":
-                    with state_lock:
-                        if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
-                            state['remaining'] = state['settings'][state['current_index']][1]
-                        state['running'] = True
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "PAUSE TIMER":
-                    with state_lock:
-                        state['running'] = False
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "RESET TIMER":
-                    with state_lock:
-                        state['running'] = False
-                        if state['current_index'] < len(state['settings']):
-                            state['remaining'] = state['settings'][state['current_index']][1]
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "NEXT PERIOD":
-                    with state_lock:
+            elif cmd == 'PAUSE_TIMER':
+                state['running'] = False
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'RESET_TIMER':
+                state['running'] = False
+                if state['current_index'] < len(state['settings']):
+                    state['remaining'] = state['settings'][state['current_index']][1]
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'NEXT_PERIOD':
+                if state['current_index'] < len(state['settings']) - 1:
+                    state['current_index'] += 1
+                    state['remaining'] = state['settings'][state['current_index']][1]
+                    state['running'] = False
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'PREV_PERIOD':
+                if state['current_index'] > 0:
+                    state['current_index'] -= 1
+                    state['remaining'] = state['settings'][state['current_index']][1]
+                    state['running'] = False
+                return jsonify({'status': 'ok'})
+            
+            # Period Management
+            elif cmd == 'INCREASE_PERIOD':
+                period_id, time_to_add = args
+                if 0 <= period_id < len(state['settings']):
+                    state['settings'][period_id][1] += time_to_add
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'DECREASE_PERIOD':
+                period_id, time_to_sub = args
+                if 0 <= period_id < len(state['settings']):
+                    state['settings'][period_id][1] -= time_to_sub
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'SET_PERIOD_TIME':
+                period_id, new_time = args
+                if 0 <= period_id < len(state['settings']):
+                    state['settings'][period_id][1] = new_time
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'REMOVE_PERIOD':
+                period_id = args[0]
+                if 0 <= period_id < len(state['settings']):
+                    if period_id < state['current_index']:
+                        state['current_index'] -= 1
+                    elif period_id == state['current_index']:
                         if state['current_index'] < len(state['settings']) - 1:
                             state['current_index'] += 1
                             state['remaining'] = state['settings'][state['current_index']][1]
-                            state['running'] = False
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "PREV PERIOD":
-                    with state_lock:
-                        if state['current_index'] > 0:
-                            state['current_index'] -= 1
-                            state['remaining'] = state['settings'][state['current_index']][1]
-                            state['running'] = False
-                    conn.sendall(b"CONNECTION OK")
-
-                elif msg == "REQUEST TIMER STATE":
-                    with state_lock:
-                        resp = {
-                            'settings': state['settings'],
-                            'current_index': state['current_index'],
-                            'remaining': state['remaining'],
-                            'running': state['running']
-                        }
-                    conn.sendall(json.dumps(resp).encode())
-                    conn.sendall(b"CONNECTION OK")
-
-                else:
-                    conn.sendall(b"UNKNOWN COMMAND")
-                    
-            except Exception as e:
-                print(f"Error: {e}")
-                conn.sendall(b"ERROR: " + str(e).encode())
-        print('Disconnected from', addr)
-
-# Start socket server on separate port
-print(f"Starting socket server on {HOST}:{SOCKET_PORT}")
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((HOST, SOCKET_PORT))
-    s.listen(5)
-    print(f"Socket server running on port {SOCKET_PORT}")
-    while running_server:
-        try:
-            conn, addr = s.accept()
-            client_thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
-            client_thread.start()
+                        else:
+                            if state['current_index'] > 0:
+                                state['current_index'] -= 1
+                                state['remaining'] = state['settings'][state['current_index']][1]
+                            else:
+                                state['current_index'] = 0
+                                state['remaining'] = 0
+                        state['running'] = False
+                    state['settings'].pop(period_id)
+                    for i in range(period_id, len(state['settings'])):
+                        state['settings'][i][0] = f"period_{i+1}"
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'CREATE_PERIOD':
+                new_num = len(state['settings']) + 1
+                state['settings'].append([f"period_{new_num}", 0])
+                return jsonify({'status': 'ok'})
+            
+            elif cmd == 'GET_STATE':
+                return jsonify({
+                    'settings': state['settings'],
+                    'current_index': state['current_index'],
+                    'remaining': state['remaining'],
+                    'running': state['running']
+                })
+            
+            else:
+                return jsonify({'status': 'error', 'message': 'Unknown command'}), 400
+                
         except Exception as e:
-            print(f"Accept error: {e}")
-            break
-    print("Server shut down")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ----- MAIN -----
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
