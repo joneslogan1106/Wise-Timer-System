@@ -8,7 +8,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ----- TIMER STATE -----
-settings = [
+timer_settings = [
     ["period_1", 960],
     ["period_2", 960],
     ["period_3", 960],
@@ -16,9 +16,9 @@ settings = [
 ]
 
 state = {
-    'settings': settings,
+    'settings': timer_settings,
     'current_index': 0,
-    'remaining': settings[0][1] if settings else 0,
+    'remaining': timer_settings[0][1] if timer_settings else 0,
     'running': False,
     'last_updated': datetime.now().isoformat()
 }
@@ -196,7 +196,7 @@ def timer_state():
         })
 
 @app.route('/state')
-def state():
+def get_state():
     with state_lock:
         return jsonify({
             'settings': state['settings'],
