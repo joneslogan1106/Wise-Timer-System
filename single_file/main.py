@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory, make_response
 import threading
 import time
 import json
@@ -70,7 +70,6 @@ def timer_loop():
                             state['running'] = False
                             print("⏹️ Timer finished - all periods complete")
                 elif state['running'] and state['remaining'] <= 0:
-                    # If running but remaining is 0 or negative, stop
                     state['running'] = False
                     print("⏹️ Timer stopped - remaining is 0")
         except Exception as e:
@@ -86,7 +85,11 @@ print("✅ Timer loop started")
 # ----- SERVE STATIC FILES -----
 @app.route('/static/<path:path>')
 def serve_static(path):
-    return send_from_directory('static', path)
+    response = make_response(send_from_directory('static', path))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 # ----- ROUTES -----
 
@@ -94,14 +97,22 @@ def serve_static(path):
 @app.route('/')
 def index():
     with state_lock:
-        return render_template('controller.html', 
+        response = make_response(render_template('controller.html', 
                                settings=state['settings'], 
-                               convert_seconds_to_time=convert_seconds_to_time)
+                               convert_seconds_to_time=convert_seconds_to_time))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
 
 # ---- Display Route ----
 @app.route('/display')
 def display():
-    return render_template('display.html')
+    response = make_response(render_template('display.html'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 # ---- Period Management Routes ----
 @app.route('/increase', methods=['POST'])
@@ -111,7 +122,6 @@ def increase():
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
             state['settings'][period_id - 1][1] += time_to_add
-            # If this is the current period, update remaining time too
             if period_id - 1 == state['current_index'] and not state['running']:
                 state['remaining'] = state['settings'][period_id - 1][1]
     return redirect('/')
@@ -125,7 +135,6 @@ def decrease():
             state['settings'][period_id - 1][1] -= time_to_subtract
             if state['settings'][period_id - 1][1] < 0:
                 state['settings'][period_id - 1][1] = 0
-            # If this is the current period, update remaining time too
             if period_id - 1 == state['current_index'] and not state['running']:
                 state['remaining'] = state['settings'][period_id - 1][1]
     return redirect('/')
@@ -137,7 +146,6 @@ def set_time():
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
             state['settings'][period_id - 1][1] = new_time
-            # If this is the current period, update remaining time too
             if period_id - 1 == state['current_index'] and not state['running']:
                 state['remaining'] = state['settings'][period_id - 1][1]
     return redirect('/')
@@ -147,7 +155,6 @@ def remove_period():
     period_id = int(request.form.get('period_number'))
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
-            # Adjust current_index if needed
             if period_id - 1 < state['current_index']:
                 state['current_index'] -= 1
             elif period_id - 1 == state['current_index']:
@@ -163,7 +170,6 @@ def remove_period():
                         state['remaining'] = 0
                 state['running'] = False
             state['settings'].pop(period_id - 1)
-            # Renumber periods
             for i in range(period_id - 1, len(state['settings'])):
                 state['settings'][i][0] = f"period_{i+1}"
     return redirect('/')
@@ -229,27 +235,33 @@ def prev_period():
 @app.route('/timer-state')
 def timer_state():
     with state_lock:
-        response = {
+        response_data = {
             'settings': state['settings'],
             'current_index': state['current_index'],
             'remaining': state['remaining'],
             'running': state['running'],
             'current_period': state['current_index'] + 1 if state['settings'] else 0
         }
-        print(f"📊 /timer-state: {response}")  # Debug log
-        return jsonify(response)
+        response = make_response(jsonify(response_data))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
 
 @app.route('/state')
 def get_state():
     with state_lock:
-        response = {
+        response_data = {
             'settings': state['settings'],
             'current_index': state['current_index'],
             'remaining': state['remaining'],
             'running': state['running']
         }
-        print(f"📊 /state: {response}")  # Debug log
-        return jsonify(response)
+        response = make_response(jsonify(response_data))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
 
 # ---- Health Check ----
 @app.route('/health')
