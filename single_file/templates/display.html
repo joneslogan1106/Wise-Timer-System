@@ -266,7 +266,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 6px 30px 30px;          /* reduced top padding to move period up */
+            padding: 6px 30px 30px;
             background: linear-gradient(145deg, #060606, #010203 58%, #080b0f);
             border: 5px solid var(--gold);
             clip-path: polygon(0 25px, 25px 0, calc(100% - 25px) 0, 100% 25px, 100% calc(100% - 25px), calc(100% - 25px) 100%, 25px 100%, 0 calc(100% - 25px));
@@ -292,7 +292,7 @@
         .period-label {
             position: relative;
             z-index: 2;
-            margin: 0 0 4px;                 /* reduced space below label */
+            margin: 0 0 12px;              /* increased space below label */
             color: var(--gold-2);
             font-family: "Oswald", sans-serif;
             font-size: clamp(1rem, 1.7vw, 1.8rem);
@@ -311,7 +311,7 @@
             align-items: center;
             justify-content: center;
             gap: clamp(12px, 1.6vw, 28px);
-            margin: 0 0 4px;                 /* reduced space below period row */
+            margin: 0 0 16px;              /* increased space below period row */
             flex-wrap: nowrap;
             min-height: clamp(44px, 5vw, 72px);
         }
@@ -340,7 +340,7 @@
         .timer {
             position: relative;
             z-index: 2;
-            margin: 0 0 12px;                /* keep separation below timer */
+            margin: 0 0 12px;
             color: #fff;
             font-family: "Anton", "Teko", Impact, sans-serif;
             font-size: clamp(6rem, 14vw, 13rem);
@@ -470,8 +470,8 @@
             .school-name { font-size: 0.58rem; letter-spacing: .15em; height: 30px; }
             .pgtao { min-width: 150px; bottom: 0; padding: 4px 20px 5px; font-size: 0.7rem; margin-bottom: -3px; }
             .timer-card { padding: 4px 8px 25px; }
-            .period-label { margin-bottom: 2px; font-size: 0.85rem; }
-            .period-row { gap: 8px; min-height: clamp(40px, 6vw, 55px); margin-bottom: 2px; }
+            .period-label { margin-bottom: 8px; font-size: 0.85rem; }
+            .period-row { gap: 8px; min-height: clamp(40px, 6vw, 55px); margin-bottom: 10px; }
             .period-number, .period-total { font-size: 3rem; }
             .period-of { font-size: 1.6rem; }
             .timer { font-size: clamp(4.5rem, 20vw, 7.5rem); margin-bottom: 8px; }
@@ -492,8 +492,8 @@
             .school-name { height: 28px; font-size: 0.65rem; }
             .pgtao { padding: 4px 24px 5px; font-size: 0.7rem; min-width: 180px; }
             .timer-card { padding: 4px 20px 20px; }
-            .period-label { font-size: 1rem; margin-bottom: 2px; }
-            .period-row { min-height: 38px; margin-bottom: 2px; }
+            .period-label { font-size: 1rem; margin-bottom: 8px; }
+            .period-row { min-height: 38px; margin-bottom: 10px; }
             .period-number, .period-total { font-size: 3.2rem; }
             .period-of { font-size: 1.6rem; }
             .timer { font-size: clamp(5rem, 12vw, 8.5rem); margin-bottom: 8px; }
