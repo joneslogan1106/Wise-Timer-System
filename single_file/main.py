@@ -65,9 +65,127 @@ def timer_loop():
 timer_thread = threading.Thread(target=timer_loop, daemon=True)
 timer_thread.start()
 
-# ----- API ENDPOINTS -----
-@app.route('/api/state')
-def api_state():
+# ----- ROUTES -----
+
+# ---- Controller Routes (from your controller.html) ----
+@app.route('/')
+def index():
+    with state_lock:
+        return render_template('controller.html', 
+                               settings=state['settings'], 
+                               convert_seconds_to_time=convert_seconds_to_time)
+
+@app.route('/increase', methods=['POST'])
+def increase():
+    period_id = int(request.form.get('period_number'))
+    time_to_add = convert_time_to_seconds(request.form.get('increase_time'))
+    with state_lock:
+        if 0 <= period_id - 1 < len(state['settings']):
+            state['settings'][period_id - 1][1] += time_to_add
+    return redirect('/')
+
+@app.route('/decrease', methods=['POST'])
+def decrease():
+    period_id = int(request.form.get('period_number'))
+    time_to_subtract = convert_time_to_seconds(request.form.get('decrease_time'))
+    with state_lock:
+        if 0 <= period_id - 1 < len(state['settings']):
+            state['settings'][period_id - 1][1] -= time_to_subtract
+            if state['settings'][period_id - 1][1] < 0:
+                state['settings'][period_id - 1][1] = 0
+    return redirect('/')
+
+@app.route('/set-time', methods=['POST'])
+def set_time():
+    period_id = int(request.form.get('period_number'))
+    new_time = convert_time_to_seconds(request.form.get('set_time'))
+    with state_lock:
+        if 0 <= period_id - 1 < len(state['settings']):
+            state['settings'][period_id - 1][1] = new_time
+    return redirect('/')
+
+@app.route('/remove_period', methods=['POST'])
+def remove_period():
+    period_id = int(request.form.get('period_number'))
+    with state_lock:
+        if 0 <= period_id - 1 < len(state['settings']):
+            # Adjust current_index if needed
+            if period_id - 1 < state['current_index']:
+                state['current_index'] -= 1
+            elif period_id - 1 == state['current_index']:
+                if state['current_index'] < len(state['settings']) - 1:
+                    state['current_index'] += 1
+                    state['remaining'] = state['settings'][state['current_index']][1]
+                else:
+                    if state['current_index'] > 0:
+                        state['current_index'] -= 1
+                        state['remaining'] = state['settings'][state['current_index']][1]
+                    else:
+                        state['current_index'] = 0
+                        state['remaining'] = 0
+                state['running'] = False
+            state['settings'].pop(period_id - 1)
+            # Renumber periods
+            for i in range(period_id - 1, len(state['settings'])):
+                state['settings'][i][0] = f"period_{i+1}"
+    return redirect('/')
+
+@app.route('/create_period', methods=['POST'])
+def create_period():
+    with state_lock:
+        new_num = len(state['settings']) + 1
+        state['settings'].append([f"period_{new_num}", 0])
+    return redirect('/')
+
+@app.route('/end_server', methods=['POST'])
+def end_server():
+    # Just redirect - the server is now a web service
+    return redirect('/')
+
+# ---- Timer Control Routes ----
+@app.route('/start', methods=['POST'])
+def start_timer():
+    with state_lock:
+        if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
+            state['remaining'] = state['settings'][state['current_index']][1]
+        state['running'] = True
+    return redirect('/')
+
+@app.route('/pause', methods=['POST'])
+def pause_timer():
+    with state_lock:
+        state['running'] = False
+    return redirect('/')
+
+@app.route('/reset', methods=['POST'])
+def reset_timer():
+    with state_lock:
+        state['running'] = False
+        if state['current_index'] < len(state['settings']):
+            state['remaining'] = state['settings'][state['current_index']][1]
+    return redirect('/')
+
+@app.route('/next', methods=['POST'])
+def next_period():
+    with state_lock:
+        if state['current_index'] < len(state['settings']) - 1:
+            state['current_index'] += 1
+            state['remaining'] = state['settings'][state['current_index']][1]
+            state['running'] = False
+    return redirect('/')
+
+@app.route('/prev', methods=['POST'])
+def prev_period():
+    with state_lock:
+        if state['current_index'] > 0:
+            state['current_index'] -= 1
+            state['remaining'] = state['settings'][state['current_index']][1]
+            state['running'] = False
+    return redirect('/')
+
+# ---- API Endpoints (for JavaScript) ----
+@app.route('/timer-state')
+def timer_state():
     with state_lock:
         return jsonify({
             'settings': state['settings'],
@@ -77,111 +195,22 @@ def api_state():
             'current_period': state['current_index'] + 1 if state['settings'] else 0
         })
 
-@app.route('/api/command', methods=['POST'])
-def api_command():
-    data = request.json
-    cmd = data.get('command', '')
-    args = data.get('args', [])
-    
+@app.route('/state')
+def state():
     with state_lock:
-        try:
-            if cmd == 'START_TIMER':
-                if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
-                    state['remaining'] = state['settings'][state['current_index']][1]
-                state['running'] = True
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'PAUSE_TIMER':
-                state['running'] = False
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'RESET_TIMER':
-                state['running'] = False
-                if state['current_index'] < len(state['settings']):
-                    state['remaining'] = state['settings'][state['current_index']][1]
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'NEXT_PERIOD':
-                if state['current_index'] < len(state['settings']) - 1:
-                    state['current_index'] += 1
-                    state['remaining'] = state['settings'][state['current_index']][1]
-                    state['running'] = False
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'PREV_PERIOD':
-                if state['current_index'] > 0:
-                    state['current_index'] -= 1
-                    state['remaining'] = state['settings'][state['current_index']][1]
-                    state['running'] = False
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'INCREASE_PERIOD':
-                if len(args) >= 2:
-                    period_id, time_to_add = args
-                    if 0 <= period_id < len(state['settings']):
-                        state['settings'][period_id][1] += time_to_add
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'DECREASE_PERIOD':
-                if len(args) >= 2:
-                    period_id, time_to_sub = args
-                    if 0 <= period_id < len(state['settings']):
-                        state['settings'][period_id][1] -= time_to_sub
-                        if state['settings'][period_id][1] < 0:
-                            state['settings'][period_id][1] = 0
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'SET_PERIOD_TIME':
-                if len(args) >= 2:
-                    period_id, new_time = args
-                    if 0 <= period_id < len(state['settings']):
-                        state['settings'][period_id][1] = new_time
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'REMOVE_PERIOD':
-                if len(args) >= 1:
-                    period_id = args[0]
-                    if 0 <= period_id < len(state['settings']):
-                        # Adjust current_index if needed
-                        if period_id < state['current_index']:
-                            state['current_index'] -= 1
-                        elif period_id == state['current_index']:
-                            if state['current_index'] < len(state['settings']) - 1:
-                                state['current_index'] += 1
-                                state['remaining'] = state['settings'][state['current_index']][1]
-                            else:
-                                if state['current_index'] > 0:
-                                    state['current_index'] -= 1
-                                    state['remaining'] = state['settings'][state['current_index']][1]
-                                else:
-                                    state['current_index'] = 0
-                                    state['remaining'] = 0
-                            state['running'] = False
-                        state['settings'].pop(period_id)
-                        for i in range(period_id, len(state['settings'])):
-                            state['settings'][i][0] = f"period_{i+1}"
-                return jsonify({'status': 'ok'})
-            
-            elif cmd == 'CREATE_PERIOD':
-                new_num = len(state['settings']) + 1
-                state['settings'].append([f"period_{new_num}", 0])
-                return jsonify({'status': 'ok'})
-            
-            else:
-                return jsonify({'status': 'error', 'message': 'Unknown command'}), 400
-                
-        except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({
+            'settings': state['settings'],
+            'current_index': state['current_index'],
+            'remaining': state['remaining'],
+            'running': state['running']
+        })
 
-# ----- WEB PAGES -----
-@app.route('/')
-def controller():
-    return render_template('controller.html', convert_seconds_to_time=convert_seconds_to_time)
-
+# ---- Display Route ----
 @app.route('/display')
 def display():
-    return render_template('timer.html', convert_seconds_to_time=convert_seconds_to_time)
+    return render_template('display.html')
 
+# ---- Health Check ----
 @app.route('/health')
 def health():
     return 'OK', 200
