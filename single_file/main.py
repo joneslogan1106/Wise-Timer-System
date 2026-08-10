@@ -296,7 +296,8 @@ def get_state():
             'settings': state['settings'],
             'current_index': state['current_index'],
             'remaining': state['remaining'],
-            'running': state['running']
+            'running': state['running'],
+            'total_periods': len(state['settings'])
         }
         response = make_response(jsonify(response_data))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
