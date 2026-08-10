@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wise Timer Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e1a;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .container { width: 100%; max-width: 1000px; padding: 20px; }
+        
+        .header h1 {
+            font-size: 3rem;
+            color: #FFD700;
+            letter-spacing: 5px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        .header p { color: #aac8ff; font-size: 1.2rem; }
+        
+        .timer-card {
+            background: linear-gradient(145deg, #111827, #0a0e1a);
+            border: 4px solid #FFD700;
+            border-radius: 50px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.1);
+        }
+        .period-label {
+            font-size: 2rem;
+            color: #aac8ff;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+        }
+        .period-number {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .timer {
+            font-size: 10rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            color: #FFD700;
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            letter-spacing: 5px;
+        }
+        .next-period {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+        .next-period span { color: #FFD700; font-weight: bold; }
+        .status {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+        .status .running { color: #4CAF50; }
+        .status .paused { color: #FFA726; }
+        
+        .motto {
+            font-size: 1.5rem;
+            color: #FFD700;
+            border-top: 1px solid rgba(255, 215, 0, 0.3);
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        .motto small {
+            display: block;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8rem; }
+            .timer { font-size: 5rem; }
+            .period-number { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏈 Wise Pumas Practice Clock</h1>
+            <p>Dr. Henry A. Wise Jr. High School</p>
+        </div>
+
+        <div class="timer-card">
+            <div class="period-label">Period</div>
+            <div class="period-number" id="periodNumber">1</div>
+            <div class="timer" id="timerDisplay">00:00</div>
+            <div class="next-period">
+                Next period starts in <span id="nextPeriodTime">00:00</span>
+            </div>
+            <div class="status" id="statusIndicator">
+                <span class="paused">⏸ PAUSED</span>
+            </div>
+        </div>
+
+        <div class="motto">
+            "Champions are made in the off season"
+            <small>🏆 P.U.M.A.S. Pride</small>
+        </div>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            if (seconds < 0) seconds = 0;
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        async function updateDisplay() {
+            try {
+                const resp = await fetch('/api/state');
+                const data = await resp.json();
+                
+                document.getElementById('periodNumber').textContent = data.current_period || '?';
+                document.getElementById('timerDisplay').textContent = formatTime(data.remaining);
+                document.getElementById('nextPeriodTime').textContent = formatTime(data.remaining);
+                
+                const statusEl = document.getElementById('statusIndicator');
+                if (data.running) {
+                    statusEl.innerHTML = '<span class="running">▶ RUNNING</span>';
+                } else {
+                    statusEl.innerHTML = '<span class="paused">⏸ PAUSED</span>';
+                }
+            } catch (e) {
+                console.error('Update failed:', e);
+            }
+        }
+
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
+    </script>
+</body>
+</html>

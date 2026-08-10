@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wise Timing Controller</title>
+    <style>
+        body {
+            background: #0a0e1a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #FFD700;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 { color: #FFD700; }
+        .header p { color: #aac8ff; }
+        
+        .timer-status {
+            text-align: center;
+            background: #111827;
+            border: 2px solid #FFD700;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .timer-status .period { font-size: 2rem; color: #FFD700; }
+        .timer-status .time { font-size: 4rem; font-weight: bold; }
+        .timer-status .running { color: #4CAF50; }
+        .timer-status .paused { color: #FFA726; }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+        }
+        .btn-start { background: #2e7d32; }
+        .btn-pause { background: #b26a00; }
+        .btn-reset { background: #b71c1c; }
+        .btn-next { background: #0d47a1; }
+        .btn-prev { background: #0d47a1; }
+        .btn-danger { background: #880e4f; }
+        
+        .card {
+            background: #111827;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h2 { color: #FFD700; margin-bottom: 15px; }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .form-row input {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #fff;
+            flex: 1;
+            min-width: 120px;
+        }
+        .form-row button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #FFD700;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .settings-list {
+            list-style: none;
+            padding: 0;
+        }
+        .settings-list li {
+            padding: 8px 15px;
+            background: #1a1a2e;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            border-left: 3px solid #FFD700;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏈 Wise Timing Controller</h1>
+            <p>Dr. Henry A. Wise Jr. High School</p>
+        </div>
+
+        <!-- Timer Status -->
+        <div class="timer-status" id="timerStatus">
+            <div class="period">Period <span id="periodNum">-</span></div>
+            <div class="time" id="timerDisplay">--:--</div>
+            <div>Status: <span id="stateDisplay" class="paused">⏸ PAUSED</span></div>
+        </div>
+
+        <!-- Timer Controls -->
+        <div class="card">
+            <h2>Timer Controls</h2>
+            <div class="btn-group">
+                <button class="btn btn-start" onclick="sendCommand('START_TIMER')">▶ Start</button>
+                <button class="btn btn-pause" onclick="sendCommand('PAUSE_TIMER')">⏸ Pause</button>
+                <button class="btn btn-reset" onclick="sendCommand('RESET_TIMER')">⟲ Reset</button>
+                <button class="btn btn-next" onclick="sendCommand('NEXT_PERIOD')">⏭ Next</button>
+                <button class="btn btn-prev" onclick="sendCommand('PREV_PERIOD')">⏮ Prev</button>
+            </div>
+        </div>
+
+        <!-- Period Settings -->
+        <div class="card">
+            <h2>Period Settings</h2>
+            <ul class="settings-list" id="settingsList">
+                <li>Loading...</li>
+            </ul>
+        </div>
+
+        <!-- Edit Periods -->
+        <div class="card">
+            <h2>Edit Periods</h2>
+            
+            <div class="form-row">
+                <span>Increase:</span>
+                <input type="number" id="incPeriod" placeholder="Period #" min="1">
+                <input type="text" id="incTime" placeholder="HH:MM:SS">
+                <button onclick="increasePeriod()">Add</button>
+            </div>
+            
+            <div class="form-row">
+                <span>Decrease:</span>
+                <input type="number" id="decPeriod" placeholder="Period #" min="1">
+                <input type="text" id="decTime" placeholder="HH:MM:SS">
+                <button onclick="decreasePeriod()">Subtract</button>
+            </div>
+            
+            <div class="form-row">
+                <span>Set Time:</span>
+                <input type="number" id="setPeriod" placeholder="Period #" min="1">
+                <input type="text" id="setTime" placeholder="HH:MM:SS">
+                <button onclick="setPeriodTime()">Set</button>
+            </div>
+            
+            <div class="form-row">
+                <span>Remove:</span>
+                <input type="number" id="removePeriod" placeholder="Period #" min="1">
+                <button class="btn btn-danger" onclick="removePeriod()">Remove</button>
+            </div>
+            
+            <div class="form-row">
+                <button class="btn btn-start" onclick="createPeriod()">+ Create New Period</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            Wise Timing System &bull; Dr. Henry A. Wise Jr. High School
+        </div>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            if (seconds < 0) seconds = 0;
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        function timeToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length === 3) return parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
+            if (parts.length === 2) return parseInt(parts[0])*60 + parseInt(parts[1]);
+            return 0;
+        }
+
+        async function sendCommand(command, args = []) {
+            try {
+                const resp = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command, args })
+                });
+                const data = await resp.json();
+                if (data.status === 'error') {
+                    alert('Error: ' + data.message);
+                }
+                updateStatus();
+                return data;
+            } catch (e) {
+                console.error('Command failed:', e);
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const resp = await fetch('/api/state');
+                const data = await resp.json();
+                
+                document.getElementById('periodNum').textContent = data.current_period || '?';
+                document.getElementById('timerDisplay').textContent = formatTime(data.remaining);
+                
+                const stateSpan = document.getElementById('stateDisplay');
+                if (data.running) {
+                    stateSpan.textContent = '▶ RUNNING';
+                    stateSpan.className = 'running';
+                } else {
+                    stateSpan.textContent = '⏸ PAUSED';
+                    stateSpan.className = 'paused';
+                }
+                
+                const settingsList = document.getElementById('settingsList');
+                settingsList.innerHTML = '';
+                data.settings.forEach((s, i) => {
+                    const li = document.createElement('li');
+                    li.textContent = `Period ${i+1}: ${formatTime(s[1])}`;
+                    settingsList.appendChild(li);
+                });
+            } catch (e) {
+                console.error('Status update failed:', e);
+            }
+        }
+
+        function increasePeriod() {
+            const period = parseInt(document.getElementById('incPeriod').value) - 1;
+            const time = timeToSeconds(document.getElementById('incTime').value);
+            if (isNaN(period) || isNaN(time) || time <= 0) {
+                alert('Please enter valid period number and time');
+                return;
+            }
+            sendCommand('INCREASE_PERIOD', [period, time]);
+            document.getElementById('incPeriod').value = '';
+            document.getElementById('incTime').value = '';
+        }
+
+        function decreasePeriod() {
+            const period = parseInt(document.getElementById('decPeriod').value) - 1;
+            const time = timeToSeconds(document.getElementById('decTime').value);
+            if (isNaN(period) || isNaN(time) || time <= 0) {
+                alert('Please enter valid period number and time');
+                return;
+            }
+            sendCommand('DECREASE_PERIOD', [period, time]);
+            document.getElementById('decPeriod').value = '';
+            document.getElementById('decTime').value = '';
+        }
+
+        function setPeriodTime() {
+            const period = parseInt(document.getElementById('setPeriod').value) - 1;
+            const time = timeToSeconds(document.getElementById('setTime').value);
+            if (isNaN(period) || isNaN(time)) {
+                alert('Please enter valid period number and time');
+                return;
+            }
+            sendCommand('SET_PERIOD_TIME', [period, time]);
+            document.getElementById('setPeriod').value = '';
+            document.getElementById('setTime').value = '';
+        }
+
+        function removePeriod() {
+            const period = parseInt(document.getElementById('removePeriod').value) - 1;
+            if (isNaN(period) || period < 0) {
+                alert('Please enter valid period number');
+                return;
+            }
+            sendCommand('REMOVE_PERIOD', [period]);
+            document.getElementById('removePeriod').value = '';
+        }
+
+        function createPeriod() {
+            sendCommand('CREATE_PERIOD');
+        }
+
+        // Update every second
+        updateStatus();
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>
