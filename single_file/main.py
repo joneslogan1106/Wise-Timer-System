@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory
 import threading
 import time
 import json
@@ -65,9 +65,14 @@ def timer_loop():
 timer_thread = threading.Thread(target=timer_loop, daemon=True)
 timer_thread.start()
 
+# ----- SERVE STATIC FILES -----
+@app.route('/static/<path:path>')
+def serve_static(path):
+    return send_from_directory('static', path)
+
 # ----- ROUTES -----
 
-# ---- Controller Routes (from your controller.html) ----
+# ---- Controller Route ----
 @app.route('/')
 def index():
     with state_lock:
@@ -75,6 +80,12 @@ def index():
                                settings=state['settings'], 
                                convert_seconds_to_time=convert_seconds_to_time)
 
+# ---- Display Route ----
+@app.route('/display')
+def display():
+    return render_template('display.html')
+
+# ---- Period Management Routes ----
 @app.route('/increase', methods=['POST'])
 def increase():
     period_id = int(request.form.get('period_number'))
@@ -139,7 +150,6 @@ def create_period():
 
 @app.route('/end_server', methods=['POST'])
 def end_server():
-    # Just redirect - the server is now a web service
     return redirect('/')
 
 # ---- Timer Control Routes ----
@@ -204,11 +214,6 @@ def get_state():
             'remaining': state['remaining'],
             'running': state['running']
         })
-
-# ---- Display Route ----
-@app.route('/display')
-def display():
-    return render_template('display.html')
 
 # ---- Health Check ----
 @app.route('/health')
