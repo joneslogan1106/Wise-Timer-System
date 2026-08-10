@@ -120,8 +120,8 @@
             height: 100%;
             padding: 18px 38px 12px;
             display: grid;
-            grid-template-rows: 132px 34px minmax(0, 1fr) 56px;
-            gap: 4px;
+            grid-template-rows: 155px 30px minmax(0, 1fr) 56px;
+            gap: 6px;
         }
 
         /* ---------- HEADER ---------- */
@@ -177,7 +177,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
         .school-line::before,
         .school-line::after {
@@ -192,42 +192,54 @@
             margin: 0;
             color: var(--white);
             font-family: "Oswald", "Arial Narrow", sans-serif;
-            font-size: clamp(1.35rem, 2.65vw, 2.65rem);
+            font-size: clamp(1rem, 1.6vw, 1.6rem);
             line-height: 1;
             font-weight: 700;
             font-style: italic;
-            letter-spacing: .16em;
+            letter-spacing: .2em;
             text-transform: uppercase;
             white-space: nowrap;
-            text-shadow: 3px 3px 0 rgba(0,0,0,.55);
+            text-shadow: 2px 3px 0 rgba(0,0,0,.55);
         }
 
-        .practice-title {
-            display: block;
-            margin: 1px 0 0;
-            color: var(--gold-2);
+        .practice-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            margin-top: 2px;
+        }
+        .practice-text span:first-child {
             font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(3rem, 6.4vw, 6.1rem);
-            line-height: .78;
+            font-size: clamp(1.8rem, 3.2vw, 3rem);
+            color: var(--white);
             font-weight: 400;
-            font-style: italic;
-            letter-spacing: .045em;
+            letter-spacing: .08em;
+            text-shadow: 2px 3px 0 rgba(0,0,0,.5);
             text-transform: uppercase;
-            white-space: nowrap;
-            text-shadow: 4px 5px 0 #806000, 0 0 18px rgba(255,210,26,.15);
+        }
+        .practice-text span:last-child {
+            font-family: "Anton", "Teko", Impact, sans-serif;
+            font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+            color: var(--gold-2);
+            font-weight: 400;
+            letter-spacing: .04em;
+            text-shadow: 3px 4px 0 #806000, 0 0 18px rgba(255,210,26,.15);
+            margin-top: -4px;
+            text-transform: uppercase;
         }
 
         .school-name {
             width: 100%;
-            height: 34px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #edf1f7;
             font-family: "Oswald", "Arial Narrow", sans-serif;
-            font-size: clamp(.68rem, .95vw, 1rem);
+            font-size: clamp(0.55rem, 0.8vw, 0.85rem);
             font-weight: 600;
-            letter-spacing: .28em;
+            letter-spacing: .25em;
             line-height: 1;
             text-transform: uppercase;
             text-align: center;
@@ -242,14 +254,14 @@
             bottom: 0;
             transform: translateX(-50%);
             z-index: 10;
-            min-width: 220px;
-            padding: 5px 32px 7px;
+            min-width: 200px;
+            padding: 4px 28px 5px;
             color: #fff;
             background: linear-gradient(180deg, #11549f, #06306a);
             border: 2px solid var(--gold);
             clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
             font-family: "Oswald", sans-serif;
-            font-size: clamp(.8rem, 1.2vw, 1.15rem);
+            font-size: clamp(0.65rem, 1vw, 0.95rem);
             font-weight: 700;
             letter-spacing: .34em;
             text-indent: .34em;
@@ -457,7 +469,7 @@
                 min-height: 100vh;
                 height: auto;
                 padding: 12px 10px;
-                grid-template-rows: 125px 30px minmax(430px, 1fr) 60px;
+                grid-template-rows: 135px 26px minmax(430px, 1fr) 60px;
             }
             .header { height: 100%; }
             .logo-left { left: 2px; top: 22%; }
@@ -465,11 +477,12 @@
             .logo-left img { width: 72px; max-height: 55px; }
             .logo-right img { width: 62px; max-height: 42px; }
             .header-center { width: 100%; padding: 0 5px; }
-            .header-center h1 { font-size: 1rem; letter-spacing: .09em; }
-            .practice-title { font-size: 3.2rem; }
+            .header-center h1 { font-size: 0.9rem; letter-spacing: .09em; }
+            .practice-text span:first-child { font-size: 1.6rem; }
+            .practice-text span:last-child { font-size: 2rem; }
             .school-line { display: none; }
-            .school-name { font-size: .58rem; letter-spacing: .15em; }
-            .pgtao { min-width: 150px; bottom: 0; padding: 4px 20px 5px; font-size: .7rem; margin-bottom: -3px; }
+            .school-name { font-size: 0.5rem; letter-spacing: .15em; height: 26px; }
+            .pgtao { min-width: 140px; bottom: 0; padding: 3px 16px 4px; font-size: 0.6rem; margin-bottom: -2px; }
             .timer-card { padding: 20px 8px 25px; }
             .period-row { gap: 8px; height: clamp(40px, 6vw, 55px); }
             .period-number, .period-total { font-size: 3rem; }
@@ -483,13 +496,15 @@
         }
 
         @media (max-height: 720px) and (min-width: 701px) {
-            .display-shell { padding-top: 8px; padding-bottom: 6px; grid-template-rows: 100px 26px minmax(0,1fr) 42px; gap: 3px; }
+            .display-shell { padding-top: 8px; padding-bottom: 6px; grid-template-rows: 110px 24px minmax(0,1fr) 42px; gap: 4px; }
             .header { height: 100%; }
             .logo-left img { width: 145px; max-height: 70px; }
             .logo-right img { width: 95px; max-height: 52px; }
-            .header-center h1 { font-size: 1.7rem; }
-            .practice-title { font-size: 3.6rem; }
-            .school-name { height: 26px; font-size: .7rem; }
+            .header-center h1 { font-size: 1.2rem; }
+            .practice-text span:first-child { font-size: 2rem; }
+            .practice-text span:last-child { font-size: 2.6rem; }
+            .school-name { height: 24px; font-size: 0.6rem; }
+            .pgtao { padding: 3px 20px 4px; font-size: 0.7rem; }
             .timer-card { padding-top: 10px; padding-bottom: 20px; }
             .period-label { font-size: 1rem; }
             .period-row { height: 45px; }
@@ -522,7 +537,10 @@
                 <div class="header-center">
                     <div class="school-line"></div>
                     <h1>Wise Pumas Football</h1>
-                    <span class="practice-title">Practice Clock</span>
+                    <div class="practice-text">
+                        <span>Practice</span>
+                        <span>Clock</span>
+                    </div>
                 </div>
 
                 <div class="logo-right">
