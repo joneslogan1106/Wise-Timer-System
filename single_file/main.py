@@ -66,7 +66,8 @@ def timer_loop():
                         if state['current_index'] < len(state['settings']) - 1:
                             state['current_index'] += 1
                             state['remaining'] = state['settings'][state['current_index']][1]
-                            print(f"➡️ Advanced to period {state['current_index'] + 1}")
+                            state['running'] = False
+                            print(f"➡️ Advanced to period {state['current_index'] + 1} (paused)")
                         else:
                             state['running'] = False
                             print("⏹️ Timer finished")
