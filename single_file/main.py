@@ -23,6 +23,8 @@ state = {
     'last_updated': datetime.now().isoformat()
 }
 state_lock = threading.Lock()
+timer_thread = None
+timer_running = True
 
 # ----- HELPER FUNCTIONS -----
 def convert_seconds_to_time(seconds):
@@ -49,18 +51,17 @@ def convert_time_to_seconds(time_str):
 
 # ----- TIMER LOOP (Background Thread) -----
 def timer_loop():
-    """Background thread that updates the timer every second"""
+    global timer_running
     print("🔄 Timer loop thread started")
     
-    while True:
+    while timer_running:
         try:
             with state_lock:
                 if state['running'] and state['remaining'] > 0:
                     state['remaining'] -= 1
                     state['last_updated'] = datetime.now().isoformat()
-                    print(f"⏱️ Timer: {state['remaining']} seconds remaining, Period: {state['current_index'] + 1}")
+                    print(f"⏱️ Timer: {state['remaining']}s, Period: {state['current_index'] + 1}")
                     
-                    # When timer reaches 0, advance to next period
                     if state['remaining'] == 0:
                         if state['current_index'] < len(state['settings']) - 1:
                             state['current_index'] += 1
@@ -68,19 +69,29 @@ def timer_loop():
                             print(f"➡️ Advanced to period {state['current_index'] + 1}")
                         else:
                             state['running'] = False
-                            print("⏹️ Timer finished - all periods complete")
+                            print("⏹️ Timer finished")
                 elif state['running'] and state['remaining'] <= 0:
                     state['running'] = False
-                    print("⏹️ Timer stopped - remaining is 0")
+                    print("⏹️ Timer stopped")
         except Exception as e:
             print(f"❌ Timer loop error: {e}")
         
         time.sleep(1)
+    
+    print("🔄 Timer loop thread stopped")
 
-# Start timer thread
-timer_thread = threading.Thread(target=timer_loop, daemon=True)
-timer_thread.start()
-print("✅ Timer loop started")
+def start_timer_thread():
+    """Start the timer thread if it's not running"""
+    global timer_thread
+    if timer_thread is None or not timer_thread.is_alive():
+        timer_thread = threading.Thread(target=timer_loop, daemon=True)
+        timer_thread.start()
+        print("✅ Timer thread started")
+        return True
+    return False
+
+# Start timer thread on app startup
+start_timer_thread()
 
 # ----- SERVE STATIC FILES -----
 @app.route('/static/<path:path>')
@@ -96,6 +107,9 @@ def serve_static(path):
 # ---- Controller Route ----
 @app.route('/')
 def index():
+    # Ensure timer thread is running
+    start_timer_thread()
+    
     with state_lock:
         response = make_response(render_template('controller.html', 
                                settings=state['settings'], 
@@ -108,6 +122,9 @@ def index():
 # ---- Display Route ----
 @app.route('/display')
 def display():
+    # Ensure timer thread is running
+    start_timer_thread()
+    
     response = make_response(render_template('display.html'))
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
@@ -117,6 +134,8 @@ def display():
 # ---- Period Management Routes ----
 @app.route('/increase', methods=['POST'])
 def increase():
+    start_timer_thread()
+    
     period_id = int(request.form.get('period_number'))
     time_to_add = convert_time_to_seconds(request.form.get('increase_time'))
     with state_lock:
@@ -128,6 +147,8 @@ def increase():
 
 @app.route('/decrease', methods=['POST'])
 def decrease():
+    start_timer_thread()
+    
     period_id = int(request.form.get('period_number'))
     time_to_subtract = convert_time_to_seconds(request.form.get('decrease_time'))
     with state_lock:
@@ -141,6 +162,8 @@ def decrease():
 
 @app.route('/set-time', methods=['POST'])
 def set_time():
+    start_timer_thread()
+    
     period_id = int(request.form.get('period_number'))
     new_time = convert_time_to_seconds(request.form.get('set_time'))
     with state_lock:
@@ -152,6 +175,8 @@ def set_time():
 
 @app.route('/remove_period', methods=['POST'])
 def remove_period():
+    start_timer_thread()
+    
     period_id = int(request.form.get('period_number'))
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
@@ -176,6 +201,8 @@ def remove_period():
 
 @app.route('/create_period', methods=['POST'])
 def create_period():
+    start_timer_thread()
+    
     with state_lock:
         new_num = len(state['settings']) + 1
         state['settings'].append([f"period_{new_num}", 0])
@@ -188,31 +215,39 @@ def end_server():
 # ---- Timer Control Routes ----
 @app.route('/start', methods=['POST'])
 def start_timer():
+    start_timer_thread()
+    
     with state_lock:
         if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
             state['remaining'] = state['settings'][state['current_index']][1]
         state['running'] = True
-        print(f"▶️ Timer started - Period {state['current_index'] + 1}, {state['remaining']} seconds")
+        print(f"▶️ Timer started - Period {state['current_index'] + 1}, {state['remaining']}s")
     return redirect('/')
 
 @app.route('/pause', methods=['POST'])
 def pause_timer():
+    start_timer_thread()
+    
     with state_lock:
         state['running'] = False
-        print(f"⏸️ Timer paused at {state['remaining']} seconds")
+        print(f"⏸️ Timer paused at {state['remaining']}s")
     return redirect('/')
 
 @app.route('/reset', methods=['POST'])
 def reset_timer():
+    start_timer_thread()
+    
     with state_lock:
         state['running'] = False
         if state['current_index'] < len(state['settings']):
             state['remaining'] = state['settings'][state['current_index']][1]
-            print(f"🔄 Timer reset to {state['remaining']} seconds")
+            print(f"🔄 Timer reset to {state['remaining']}s")
     return redirect('/')
 
 @app.route('/next', methods=['POST'])
 def next_period():
+    start_timer_thread()
+    
     with state_lock:
         if state['current_index'] < len(state['settings']) - 1:
             state['current_index'] += 1
@@ -223,6 +258,8 @@ def next_period():
 
 @app.route('/prev', methods=['POST'])
 def prev_period():
+    start_timer_thread()
+    
     with state_lock:
         if state['current_index'] > 0:
             state['current_index'] -= 1
@@ -234,6 +271,8 @@ def prev_period():
 # ---- API Endpoints (for JavaScript) ----
 @app.route('/timer-state')
 def timer_state():
+    start_timer_thread()
+    
     with state_lock:
         response_data = {
             'settings': state['settings'],
@@ -250,6 +289,8 @@ def timer_state():
 
 @app.route('/state')
 def get_state():
+    start_timer_thread()
+    
     with state_lock:
         response_data = {
             'settings': state['settings'],

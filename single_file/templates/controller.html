@@ -180,8 +180,11 @@
     }
 
     function updateStatus() {
-        fetch('/timer-state?_=' + Date.now())  // Add timestamp to prevent caching
-            .then(res => res.json())
+        fetch('/timer-state?_=' + Date.now())
+            .then(res => {
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.json();
+            })
             .then(data => {
                 if (data.error) {
                     document.getElementById('periodNum').textContent = '?';
@@ -190,8 +193,8 @@
                     document.getElementById('stateDisplay').className = 'paused';
                     return;
                 }
-                document.getElementById('periodNum').textContent = data.current_period;
-                document.getElementById('timerDisplay').textContent = formatTime(data.remaining);
+                document.getElementById('periodNum').textContent = data.current_period || '?';
+                document.getElementById('timerDisplay').textContent = formatTime(data.remaining || 0);
                 const stateSpan = document.getElementById('stateDisplay');
                 if (data.running) {
                     stateSpan.textContent = '▶ RUNNING';
@@ -201,7 +204,8 @@
                     stateSpan.className = 'paused';
                 }
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error('Error fetching state:', error);
                 document.getElementById('periodNum').textContent = '?';
                 document.getElementById('timerDisplay').textContent = 'ERR';
                 document.getElementById('stateDisplay').textContent = '⏸ OFFLINE';
@@ -209,7 +213,6 @@
             });
     }
 
-    // Update every second
     updateStatus();
     setInterval(updateStatus, 1000);
 </script>

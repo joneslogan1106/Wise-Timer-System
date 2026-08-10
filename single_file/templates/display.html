@@ -343,8 +343,11 @@
         }
 
         function updateDisplay() {
-            fetch('/state?_=' + Date.now())  // Add timestamp to prevent caching
-                .then(res => res.json())
+            fetch('/state?_=' + Date.now())
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    return res.json();
+                })
                 .then(data => {
                     if (data.error) {
                         document.getElementById('timerDisplay').textContent = '--:--';
@@ -369,7 +372,8 @@
                         statusEl.innerHTML = '<span class="paused">⏸ PAUSED</span>';
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error('Error fetching state:', error);
                     document.getElementById('timerDisplay').textContent = 'ERR';
                     document.getElementById('periodNumber').textContent = '?';
                     document.getElementById('nextPeriodTime').textContent = '--:--';
