@@ -6,7 +6,6 @@
     <title>Wise Pumas Football Practice Clock</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicion.ico') }}">
 
-    <!-- Athletic/condensed display faces -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +32,6 @@
             font-family: "Oswald", "Arial Narrow", Arial, sans-serif;
         }
 
-        /* ---------- BACKGROUND ---------- */
         .background-texture {
             position: fixed;
             inset: 0;
@@ -66,7 +64,6 @@
                 var(--gold) 78% 100%);
         }
 
-        /* Paint strokes — behind content */
         .paint {
             position: fixed;
             z-index: 1;
@@ -123,20 +120,20 @@
             height: 100%;
             padding: 18px 38px 12px;
             display: grid;
-            grid-template-rows: 140px 34px minmax(0, 1fr) 56px;  /* increased header height */
-            gap: 6px;
+            grid-template-rows: 132px 34px minmax(0, 1fr) 56px;
+            gap: 4px;
         }
 
         /* ---------- HEADER ---------- */
         .header {
             position: relative;
             width: 100%;
-            height: 100%; /* fill grid row */
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             border-bottom: 3px solid var(--gold);
-            overflow: visible; /* allow pgtao to be visible if needed */
+            overflow: visible;
         }
 
         .logo-left,
@@ -238,11 +235,11 @@
             text-shadow: 2px 2px 3px #000;
         }
 
-        /* PGTAO badge — now fully inside header */
+        /* PGTAO — sits flush at bottom of header, no overlap */
         .pgtao {
             position: absolute;
             left: 50%;
-            bottom: 0;                    /* sits at bottom of header */
+            bottom: 0;
             transform: translateX(-50%);
             z-index: 10;
             min-width: 220px;
@@ -258,7 +255,7 @@
             text-indent: .34em;
             text-align: center;
             text-shadow: 0 2px 3px #000;
-            margin-bottom: -2px;          /* fine‑tune vertical alignment */
+            margin-bottom: -2px;
         }
 
         /* ---------- TIMER CARD ---------- */
@@ -272,7 +269,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 22px 30px 30px;       /* extra bottom padding for status */
+            padding: 18px 30px 28px;
             background: linear-gradient(145deg, #060606, #010203 58%, #080b0f);
             border: 5px solid var(--gold);
             clip-path: polygon(0 25px, 25px 0, calc(100% - 25px) 0, 100% 25px, 100% calc(100% - 25px), calc(100% - 25px) 100%, 25px 100%, 0 calc(100% - 25px));
@@ -317,7 +314,7 @@
             align-items: baseline;
             justify-content: center;
             gap: clamp(12px, 1.6vw, 28px);
-            height: clamp(45px, 5vw, 75px);   /* reduced to prevent overflow */
+            height: clamp(44px, 5vw, 72px);
             margin: 0;
         }
 
@@ -325,7 +322,7 @@
         .period-total {
             color: var(--gold-2);
             font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(3rem, 5.5vw, 5.5rem);  /* slightly smaller */
+            font-size: clamp(3rem, 5.5vw, 5.5rem);
             line-height: .8;
             font-weight: 400;
             font-style: italic;
@@ -345,10 +342,10 @@
         .timer {
             position: relative;
             z-index: 2;
-            margin: clamp(2px, 0.6vh, 6px) 0 0;
+            margin: clamp(1px, 0.4vh, 4px) 0 0;
             color: #fff;
             font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(6rem, 14vw, 13rem);   /* adjusted to fit */
+            font-size: clamp(6rem, 14vw, 13rem);
             font-weight: 400;
             line-height: .72;
             letter-spacing: .035em;
@@ -361,7 +358,7 @@
             position: relative;
             z-index: 2;
             width: min(900px, 82%);
-            margin-top: clamp(6px, 1.2vh, 14px);
+            margin-top: clamp(4px, 1vh, 12px);
             padding-top: 6px;
             display: flex;
             align-items: center;
