@@ -6,8 +6,8 @@ import os
 app = Flask(__name__)
 
 # Socket server location
-SOCKET_HOST = os.environ.get('SOCKET_HOST', 'localhost')
-SOCKET_PORT = int(os.environ.get('SOCKET_PORT', 9981))
+SOCKET_HOST = "wise-timer-socket.onrender.com"
+SOCKET_PORT = 1000
 
 def convert_seconds_to_time(seconds):
     hours = seconds // 3600
