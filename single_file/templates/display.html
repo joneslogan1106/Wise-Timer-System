@@ -6,7 +6,7 @@
     <title>Wise Pumas Football Practice Clock</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicion.ico') }}">
 
-    <!-- Athletic/condensed display faces. Fallbacks keep the display usable offline. -->
+    <!-- Athletic/condensed display faces -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
@@ -66,7 +66,7 @@
                 var(--gold) 78% 100%);
         }
 
-        /* Irregular paint strokes — intentionally outside the main content. */
+        /* Paint strokes — behind content */
         .paint {
             position: fixed;
             z-index: 1;
@@ -107,7 +107,7 @@
             clip-path: polygon(0 45%, 15% 27%, 72% 35%, 100% 8%, 90% 69%, 30% 64%);
         }
 
-        /* ---------- PAGE / PERFECT CENTERING ---------- */
+        /* ---------- PAGE / GRID ---------- */
         .page {
             position: relative;
             z-index: 5;
@@ -123,7 +123,7 @@
             height: 100%;
             padding: 18px 38px 12px;
             display: grid;
-            grid-template-rows: 118px 34px minmax(0, 1fr) 56px;
+            grid-template-rows: 140px 34px minmax(0, 1fr) 56px;  /* increased header height */
             gap: 6px;
         }
 
@@ -131,11 +131,12 @@
         .header {
             position: relative;
             width: 100%;
-            height: 118px;
+            height: 100%; /* fill grid row */
             display: flex;
             align-items: center;
             justify-content: center;
             border-bottom: 3px solid var(--gold);
+            overflow: visible; /* allow pgtao to be visible if needed */
         }
 
         .logo-left,
@@ -163,7 +164,6 @@
             filter: drop-shadow(0 4px 5px rgba(0,0,0,.65));
         }
 
-        /* This block is mathematically centered regardless of logo widths. */
         .header-center {
             width: min(760px, 58vw);
             text-align: center;
@@ -220,7 +220,6 @@
             text-shadow: 4px 5px 0 #806000, 0 0 18px rgba(255,210,26,.15);
         }
 
-        /* School label is completely separate from the P.G.T.A.O. badge. */
         .school-name {
             width: 100%;
             height: 34px;
@@ -239,10 +238,11 @@
             text-shadow: 2px 2px 3px #000;
         }
 
+        /* PGTAO badge — now fully inside header */
         .pgtao {
             position: absolute;
             left: 50%;
-            bottom: -25px;
+            bottom: 0;                    /* sits at bottom of header */
             transform: translateX(-50%);
             z-index: 10;
             min-width: 220px;
@@ -258,9 +258,10 @@
             text-indent: .34em;
             text-align: center;
             text-shadow: 0 2px 3px #000;
+            margin-bottom: -2px;          /* fine‑tune vertical alignment */
         }
 
-        /* ---------- SCOREBOARD ---------- */
+        /* ---------- TIMER CARD ---------- */
         .timer-card {
             position: relative;
             min-height: 0;
@@ -271,7 +272,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 22px 30px 18px;
+            padding: 22px 30px 30px;       /* extra bottom padding for status */
             background: linear-gradient(145deg, #060606, #010203 58%, #080b0f);
             border: 5px solid var(--gold);
             clip-path: polygon(0 25px, 25px 0, calc(100% - 25px) 0, 100% 25px, 100% calc(100% - 25px), calc(100% - 25px) 100%, 25px 100%, 0 calc(100% - 25px));
@@ -316,7 +317,7 @@
             align-items: baseline;
             justify-content: center;
             gap: clamp(12px, 1.6vw, 28px);
-            height: clamp(55px, 7vw, 92px);
+            height: clamp(45px, 5vw, 75px);   /* reduced to prevent overflow */
             margin: 0;
         }
 
@@ -324,7 +325,7 @@
         .period-total {
             color: var(--gold-2);
             font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(3.5rem, 6.2vw, 6.2rem);
+            font-size: clamp(3rem, 5.5vw, 5.5rem);  /* slightly smaller */
             line-height: .8;
             font-weight: 400;
             font-style: italic;
@@ -335,7 +336,7 @@
         .period-of {
             color: #fff;
             font-family: "Oswald", sans-serif;
-            font-size: clamp(1.8rem, 3vw, 3.1rem);
+            font-size: clamp(1.6rem, 2.6vw, 2.8rem);
             line-height: 1;
             font-weight: 600;
             letter-spacing: .04em;
@@ -344,10 +345,10 @@
         .timer {
             position: relative;
             z-index: 2;
-            margin: clamp(4px, 1vh, 10px) 0 0;
+            margin: clamp(2px, 0.6vh, 6px) 0 0;
             color: #fff;
             font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(7.2rem, 16vw, 15.5rem);
+            font-size: clamp(6rem, 14vw, 13rem);   /* adjusted to fit */
             font-weight: 400;
             line-height: .72;
             letter-spacing: .035em;
@@ -360,15 +361,15 @@
             position: relative;
             z-index: 2;
             width: min(900px, 82%);
-            margin-top: clamp(10px, 1.8vh, 18px);
-            padding-top: 8px;
+            margin-top: clamp(6px, 1.2vh, 14px);
+            padding-top: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 18px;
             color: #e9e9e9;
             font-family: "Oswald", sans-serif;
-            font-size: clamp(.72rem, 1.1vw, 1.15rem);
+            font-size: clamp(.68rem, 1vw, 1.05rem);
             font-weight: 600;
             font-style: italic;
             letter-spacing: .13em;
@@ -380,7 +381,7 @@
             content: "";
             flex: 1 1 auto;
             height: 3px;
-            min-width: 40px;
+            min-width: 30px;
             background: var(--gold);
         }
         .next-period span {
@@ -392,14 +393,14 @@
         .status {
             position: absolute;
             z-index: 3;
-            right: 27px;
-            bottom: 13px;
+            right: 25px;
+            bottom: 12px;
             font-family: "Oswald", sans-serif;
             font-size: .72rem;
             font-weight: 700;
             letter-spacing: .12em;
             text-transform: uppercase;
-            opacity: .72;
+            opacity: .8;
         }
         .status .running { color: #70d981; }
         .status .paused { color: #ffc940; }
@@ -450,7 +451,7 @@
             .logo-left img { width: 155px; }
             .logo-right img { width: 105px; }
             .header-center { width: 62vw; }
-            .timer { font-size: clamp(6rem, 16vw, 11rem); }
+            .timer { font-size: clamp(5.5rem, 14vw, 10rem); }
         }
 
         @media (max-width: 700px) {
@@ -461,7 +462,7 @@
                 padding: 12px 10px;
                 grid-template-rows: 125px 30px minmax(430px, 1fr) 60px;
             }
-            .header { height: 125px; }
+            .header { height: 100%; }
             .logo-left { left: 2px; top: 22%; }
             .logo-right { right: 2px; top: 22%; }
             .logo-left img { width: 72px; max-height: 55px; }
@@ -471,34 +472,34 @@
             .practice-title { font-size: 3.2rem; }
             .school-line { display: none; }
             .school-name { font-size: .58rem; letter-spacing: .15em; }
-            .pgtao { min-width: 150px; bottom: -23px; padding: 4px 20px 5px; font-size: .7rem; }
-            .timer-card { padding: 20px 8px 15px; }
-            .period-row { gap: 8px; }
-            .period-number, .period-total { font-size: 3.5rem; }
-            .period-of { font-size: 1.8rem; }
-            .timer { font-size: clamp(5rem, 23vw, 8rem); }
-            .next-period { width: 94%; font-size: .62rem; gap: 8px; }
-            .status { position: static; margin-top: 8px; }
+            .pgtao { min-width: 150px; bottom: 0; padding: 4px 20px 5px; font-size: .7rem; margin-bottom: -3px; }
+            .timer-card { padding: 20px 8px 25px; }
+            .period-row { gap: 8px; height: clamp(40px, 6vw, 55px); }
+            .period-number, .period-total { font-size: 3rem; }
+            .period-of { font-size: 1.6rem; }
+            .timer { font-size: clamp(4.5rem, 20vw, 7.5rem); }
+            .next-period { width: 94%; font-size: .6rem; gap: 8px; }
+            .status { position: static; margin-top: 6px; }
             .motto { height: 60px; padding: 0 8px; flex-direction: column; gap: 4px; font-size: .72rem; }
             .motto::before, .motto::after { display: none; }
             .paint { opacity: .55; }
         }
 
         @media (max-height: 720px) and (min-width: 701px) {
-            .display-shell { padding-top: 8px; padding-bottom: 6px; grid-template-rows: 88px 26px minmax(0,1fr) 42px; gap: 3px; }
-            .header { height: 88px; }
+            .display-shell { padding-top: 8px; padding-bottom: 6px; grid-template-rows: 100px 26px minmax(0,1fr) 42px; gap: 3px; }
+            .header { height: 100%; }
             .logo-left img { width: 145px; max-height: 70px; }
             .logo-right img { width: 95px; max-height: 52px; }
             .header-center h1 { font-size: 1.7rem; }
             .practice-title { font-size: 3.6rem; }
             .school-name { height: 26px; font-size: .7rem; }
-            .timer-card { padding-top: 10px; padding-bottom: 8px; }
+            .timer-card { padding-top: 10px; padding-bottom: 20px; }
             .period-label { font-size: 1rem; }
-            .period-row { height: 52px; }
-            .period-number, .period-total { font-size: 3.6rem; }
-            .period-of { font-size: 1.8rem; }
-            .timer { font-size: clamp(5.8rem, 13vw, 9.5rem); }
-            .next-period { margin-top: 5px; padding-top: 4px; }
+            .period-row { height: 45px; }
+            .period-number, .period-total { font-size: 3.2rem; }
+            .period-of { font-size: 1.6rem; }
+            .timer { font-size: clamp(5rem, 12vw, 8.5rem); }
+            .next-period { margin-top: 4px; padding-top: 4px; font-size: .7rem; }
             .motto { height: 42px; font-size: .85rem; }
         }
     </style>
