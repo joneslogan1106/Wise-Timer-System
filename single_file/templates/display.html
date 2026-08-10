@@ -202,31 +202,18 @@
             text-shadow: 2px 3px 0 rgba(0,0,0,.55);
         }
 
-        .practice-text {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* Single‑line "PRACTICE CLOCK" with bigger font */
+        .practice-title {
+            font-family: "Anton", "Teko", Impact, sans-serif;
+            font-size: clamp(2.8rem, 5.5vw, 5.5rem);
+            font-weight: 400;
+            letter-spacing: .045em;
+            color: var(--gold-2);
+            text-shadow: 3px 4px 0 #806000, 0 0 18px rgba(255,210,26,.15);
+            text-transform: uppercase;
+            white-space: nowrap;
             line-height: 1;
             margin-top: 2px;
-        }
-        .practice-text span:first-child {
-            font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(1.8rem, 3.2vw, 3rem);
-            color: var(--white);
-            font-weight: 400;
-            letter-spacing: .08em;
-            text-shadow: 2px 3px 0 rgba(0,0,0,.5);
-            text-transform: uppercase;
-        }
-        .practice-text span:last-child {
-            font-family: "Anton", "Teko", Impact, sans-serif;
-            font-size: clamp(2.2rem, 4.2vw, 3.8rem);
-            color: var(--gold-2);
-            font-weight: 400;
-            letter-spacing: .04em;
-            text-shadow: 3px 4px 0 #806000, 0 0 18px rgba(255,210,26,.15);
-            margin-top: -4px;
-            text-transform: uppercase;
         }
 
         .school-name {
@@ -281,7 +268,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 18px 30px 28px;
+            padding: 8px 30px 28px;   /* reduced top padding to move Period label up */
             background: linear-gradient(145deg, #060606, #010203 58%, #080b0f);
             border: 5px solid var(--gold);
             clip-path: polygon(0 25px, 25px 0, calc(100% - 25px) 0, 100% 25px, 100% calc(100% - 25px), calc(100% - 25px) 100%, 25px 100%, 0 calc(100% - 25px));
@@ -478,12 +465,11 @@
             .logo-right img { width: 62px; max-height: 42px; }
             .header-center { width: 100%; padding: 0 5px; }
             .header-center h1 { font-size: 0.9rem; letter-spacing: .09em; }
-            .practice-text span:first-child { font-size: 1.6rem; }
-            .practice-text span:last-child { font-size: 2rem; }
+            .practice-title { font-size: clamp(1.8rem, 8vw, 3rem); }
             .school-line { display: none; }
             .school-name { font-size: 0.5rem; letter-spacing: .15em; height: 26px; }
             .pgtao { min-width: 140px; bottom: 0; padding: 3px 16px 4px; font-size: 0.6rem; margin-bottom: -2px; }
-            .timer-card { padding: 20px 8px 25px; }
+            .timer-card { padding: 6px 8px 25px; }
             .period-row { gap: 8px; height: clamp(40px, 6vw, 55px); }
             .period-number, .period-total { font-size: 3rem; }
             .period-of { font-size: 1.6rem; }
@@ -501,11 +487,10 @@
             .logo-left img { width: 145px; max-height: 70px; }
             .logo-right img { width: 95px; max-height: 52px; }
             .header-center h1 { font-size: 1.2rem; }
-            .practice-text span:first-child { font-size: 2rem; }
-            .practice-text span:last-child { font-size: 2.6rem; }
+            .practice-title { font-size: clamp(2.2rem, 4.5vw, 3.8rem); }
             .school-name { height: 24px; font-size: 0.6rem; }
             .pgtao { padding: 3px 20px 4px; font-size: 0.7rem; }
-            .timer-card { padding-top: 10px; padding-bottom: 20px; }
+            .timer-card { padding-top: 4px; padding-bottom: 20px; }
             .period-label { font-size: 1rem; }
             .period-row { height: 45px; }
             .period-number, .period-total { font-size: 3.2rem; }
@@ -537,10 +522,7 @@
                 <div class="header-center">
                     <div class="school-line"></div>
                     <h1>Wise Pumas Football</h1>
-                    <div class="practice-text">
-                        <span>Practice</span>
-                        <span>Clock</span>
-                    </div>
+                    <span class="practice-title">Practice Clock</span>
                 </div>
 
                 <div class="logo-right">
