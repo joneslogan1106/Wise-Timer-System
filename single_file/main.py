@@ -42,33 +42,40 @@ def convert_time_to_seconds(time_str):
         elif len(parts) == 2:
             minutes, seconds = map(int, parts)
             return minutes * 60 + seconds
+        else:
+            return int(time_str)
     except:
         return 0
-    return 0
 
 # ----- TIMER LOOP (Background Thread) -----
 def timer_loop():
     """Background thread that updates the timer every second"""
+    print("🔄 Timer loop thread started")
+    
     while True:
-        with state_lock:
-            if state['running'] and state['remaining'] > 0:
-                state['remaining'] -= 1
-                state['last_updated'] = datetime.now().isoformat()
-                print(f"Timer: {state['remaining']} seconds remaining")  # Debug log
-                
-                # When timer reaches 0, advance to next period
-                if state['remaining'] == 0:
-                    if state['current_index'] < len(state['settings']) - 1:
-                        state['current_index'] += 1
-                        state['remaining'] = state['settings'][state['current_index']][1]
-                        print(f"Advanced to period {state['current_index'] + 1}")
-                    else:
-                        state['running'] = False
-                        print("Timer finished - all periods complete")
-            elif state['running'] and state['remaining'] <= 0:
-                # If running but remaining is 0 or negative, stop
-                state['running'] = False
-                print("Timer stopped - remaining is 0")
+        try:
+            with state_lock:
+                if state['running'] and state['remaining'] > 0:
+                    state['remaining'] -= 1
+                    state['last_updated'] = datetime.now().isoformat()
+                    print(f"⏱️ Timer: {state['remaining']} seconds remaining, Period: {state['current_index'] + 1}")
+                    
+                    # When timer reaches 0, advance to next period
+                    if state['remaining'] == 0:
+                        if state['current_index'] < len(state['settings']) - 1:
+                            state['current_index'] += 1
+                            state['remaining'] = state['settings'][state['current_index']][1]
+                            print(f"➡️ Advanced to period {state['current_index'] + 1}")
+                        else:
+                            state['running'] = False
+                            print("⏹️ Timer finished - all periods complete")
+                elif state['running'] and state['remaining'] <= 0:
+                    # If running but remaining is 0 or negative, stop
+                    state['running'] = False
+                    print("⏹️ Timer stopped - remaining is 0")
+        except Exception as e:
+            print(f"❌ Timer loop error: {e}")
+        
         time.sleep(1)
 
 # Start timer thread
@@ -179,14 +186,14 @@ def start_timer():
         if state['remaining'] <= 0 and state['current_index'] < len(state['settings']):
             state['remaining'] = state['settings'][state['current_index']][1]
         state['running'] = True
-        print(f"Timer started - Period {state['current_index'] + 1}, {state['remaining']} seconds")
+        print(f"▶️ Timer started - Period {state['current_index'] + 1}, {state['remaining']} seconds")
     return redirect('/')
 
 @app.route('/pause', methods=['POST'])
 def pause_timer():
     with state_lock:
         state['running'] = False
-        print(f"Timer paused at {state['remaining']} seconds")
+        print(f"⏸️ Timer paused at {state['remaining']} seconds")
     return redirect('/')
 
 @app.route('/reset', methods=['POST'])
@@ -195,7 +202,7 @@ def reset_timer():
         state['running'] = False
         if state['current_index'] < len(state['settings']):
             state['remaining'] = state['settings'][state['current_index']][1]
-            print(f"Timer reset to {state['remaining']} seconds")
+            print(f"🔄 Timer reset to {state['remaining']} seconds")
     return redirect('/')
 
 @app.route('/next', methods=['POST'])
@@ -205,7 +212,7 @@ def next_period():
             state['current_index'] += 1
             state['remaining'] = state['settings'][state['current_index']][1]
             state['running'] = False
-            print(f"Moved to period {state['current_index'] + 1}")
+            print(f"⏭️ Moved to period {state['current_index'] + 1}")
     return redirect('/')
 
 @app.route('/prev', methods=['POST'])
@@ -215,30 +222,34 @@ def prev_period():
             state['current_index'] -= 1
             state['remaining'] = state['settings'][state['current_index']][1]
             state['running'] = False
-            print(f"Moved to period {state['current_index'] + 1}")
+            print(f"⏮️ Moved to period {state['current_index'] + 1}")
     return redirect('/')
 
 # ---- API Endpoints (for JavaScript) ----
 @app.route('/timer-state')
 def timer_state():
     with state_lock:
-        return jsonify({
+        response = {
             'settings': state['settings'],
             'current_index': state['current_index'],
             'remaining': state['remaining'],
             'running': state['running'],
             'current_period': state['current_index'] + 1 if state['settings'] else 0
-        })
+        }
+        print(f"📊 /timer-state: {response}")  # Debug log
+        return jsonify(response)
 
 @app.route('/state')
 def get_state():
     with state_lock:
-        return jsonify({
+        response = {
             'settings': state['settings'],
             'current_index': state['current_index'],
             'remaining': state['remaining'],
             'running': state['running']
-        })
+        }
+        print(f"📊 /state: {response}")  # Debug log
+        return jsonify(response)
 
 # ---- Health Check ----
 @app.route('/health')
