@@ -158,6 +158,24 @@
         </div>
     </section>
 
+    <!-- IMPORT / EXPORT PERIODS -->
+    <div class="section-header"><h2>Import / Export Periods</h2></div>
+    <section class="controls">
+        <div class="control-card">
+            <h3>Download Periods</h3>
+            <p>Download all periods and their saved times as a JSON file.</p>
+            <a href="/export-periods"><button type="button" class="nav">⬇ Download JSON</button></a>
+        </div>
+        <div class="control-card">
+            <h3>Upload Periods</h3>
+            <p>Upload a previously downloaded JSON file to restore periods.</p>
+            <form action="/import-periods" method="post" enctype="multipart/form-data">
+                <input type="file" name="periods_file" accept="application/json,.json" required>
+                <button type="submit" class="nav">⬆ Upload JSON</button>
+            </form>
+        </div>
+    </section>
+
     <!-- SERVER SHUTDOWN -->
     <section class="danger-zone">
         <div><h3>Timer Server</h3><p>Shut down the timing server.</p></div>

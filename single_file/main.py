@@ -142,8 +142,8 @@ def increase():
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
             state['settings'][period_id - 1][1] += time_to_add
-            if period_id - 1 == state['current_index'] and not state['running']:
-                state['remaining'] = state['settings'][period_id - 1][1]
+            if period_id - 1 == state['current_index']:
+                state['remaining'] += time_to_add
     return redirect('/')
 
 @app.route('/decrease', methods=['POST'])
@@ -157,8 +157,10 @@ def decrease():
             state['settings'][period_id - 1][1] -= time_to_subtract
             if state['settings'][period_id - 1][1] < 0:
                 state['settings'][period_id - 1][1] = 0
-            if period_id - 1 == state['current_index'] and not state['running']:
-                state['remaining'] = state['settings'][period_id - 1][1]
+            if period_id - 1 == state['current_index']:
+                state['remaining'] -= time_to_subtract
+                if state['remaining'] < 0:
+                    state['remaining'] = 0
     return redirect('/')
 
 @app.route('/set-time', methods=['POST'])
@@ -170,8 +172,8 @@ def set_time():
     with state_lock:
         if 0 <= period_id - 1 < len(state['settings']):
             state['settings'][period_id - 1][1] = new_time
-            if period_id - 1 == state['current_index'] and not state['running']:
-                state['remaining'] = state['settings'][period_id - 1][1]
+            if period_id - 1 == state['current_index']:
+                state['remaining'] = new_time
     return redirect('/')
 
 @app.route('/remove_period', methods=['POST'])
@@ -211,6 +213,55 @@ def create_period():
 
 @app.route('/end_server', methods=['POST'])
 def end_server():
+    return redirect('/')
+
+# ---- Import / Export Periods ----
+@app.route('/export-periods')
+def export_periods():
+    with state_lock:
+        data = {'settings': state['settings']}
+    response = make_response(jsonify(data))
+    response.headers['Content-Disposition'] = 'attachment; filename=periods.json'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+@app.route('/import-periods', methods=['POST'])
+def import_periods():
+    start_timer_thread()
+
+    uploaded = request.files.get('periods_file')
+    if not uploaded or uploaded.filename == '':
+        return redirect('/')
+
+    try:
+        data = json.load(uploaded)
+        new_settings = data.get('settings')
+        if not isinstance(new_settings, list) or len(new_settings) == 0:
+            print("❌ Import error: 'settings' missing or empty")
+            return redirect('/')
+
+        cleaned = []
+        for i, item in enumerate(new_settings):
+            if isinstance(item, (list, tuple)) and len(item) == 2:
+                _, seconds = item
+                seconds = int(seconds)
+                if seconds < 0:
+                    seconds = 0
+                cleaned.append([f"period_{i + 1}", seconds])
+
+        if not cleaned:
+            print("❌ Import error: no valid periods found in file")
+            return redirect('/')
+
+        with state_lock:
+            state['settings'] = cleaned
+            state['current_index'] = 0
+            state['remaining'] = cleaned[0][1]
+            state['running'] = False
+            print(f"📥 Imported {len(cleaned)} periods from JSON file")
+    except Exception as e:
+        print(f"❌ Import error: {e}")
+
     return redirect('/')
 
 # ---- Timer Control Routes ----
